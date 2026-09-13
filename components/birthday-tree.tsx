@@ -100,8 +100,8 @@ function BurstGroup({
               <path
                 d={HEART_PATH}
                 fill={burst.color}
-                stroke="#fff"
-                strokeOpacity={0.25}
+                stroke="#ecfdf5"
+                strokeOpacity={0.35}
                 strokeWidth={0.3}
               />
             </motion.g>
@@ -411,38 +411,38 @@ export default function BirthdayTree() {
   const onBigHeartArrived = () => {
     setFlash(true)
 
-    // ANA PEMBE PATLAMA
+    // Zümrüt ana patlama
     spawnBurst(
       400,
       300,
-      '#f43f5e',
-      70,
+      '#10b981',
+      75,
       'big',
     )
 
-    // YEŞİL IŞIK
+    // Açık yeşil enerji
     spawnBurst(
       400,
       300,
       '#34d399',
-      45,
+      55,
       'big',
     )
 
-    // ALTIN PARILTILAR
+    // Lime parıltıları
     spawnBurst(
       400,
       300,
-      '#fbbf24',
-      35,
+      '#86efac',
+      40,
       'big',
     )
 
-    // BEYAZ YILDIZLAR
+    // Açık yeşil / beyaz ışıltı
     spawnBurst(
       400,
       300,
-      '#ffffff',
+      '#d9f99d',
       30,
       'big',
     )
@@ -455,8 +455,6 @@ export default function BirthdayTree() {
       setFlash(false)
     }, 650)
 
-    // Patlamanın tamamen hissedilmesi için
-    // sayaç biraz daha geç gelir.
     setTimeout(() => {
       setFinale(true)
     }, 1500)
@@ -636,7 +634,7 @@ export default function BirthdayTree() {
                   ),
               )}
 
-            {/* BÜYÜK FİNAL KALBİ */}
+            {/* BÜYÜK YEŞİL FİNAL KALBİ */}
             <AnimatePresence>
               {bigPhase ===
                 'flying' && (
@@ -684,16 +682,16 @@ export default function BirthdayTree() {
                 >
                   <path
                     d={HEART_PATH}
-                    fill="#f43f5e"
-                    stroke="#fecdd3"
+                    fill="#10b981"
+                    stroke="#a7f3d0"
                     strokeWidth={0.5}
                   />
 
-                  {/* Kalbin iç parıltısı */}
+                  {/* Kalp içi parıltı */}
                   <motion.path
                     d={HEART_PATH}
                     fill="none"
-                    stroke="#ffffff"
+                    stroke="#ecfdf5"
                     strokeWidth={0.7}
                     initial={{
                       opacity: 0.2,
@@ -716,11 +714,11 @@ export default function BirthdayTree() {
               )}
             </AnimatePresence>
 
-            {/* ŞAŞALI FİNAL PATLAMASI */}
+            {/* YEŞİL ŞAŞALI PATLAMA */}
             <AnimatePresence>
               {flash && (
                 <>
-                  {/* Beyaz flash */}
+                  {/* Beyaz merkez flash */}
                   <motion.circle
                     cx={400}
                     cy={300}
@@ -740,19 +738,19 @@ export default function BirthdayTree() {
                     pointerEvents="none"
                   />
 
-                  {/* Pembe shockwave */}
+                  {/* Zümrüt shockwave */}
                   <motion.circle
                     cx={400}
                     cy={300}
                     fill="none"
-                    stroke="#fb7185"
-                    strokeWidth={4}
+                    stroke="#10b981"
+                    strokeWidth={5}
                     initial={{
                       r: 15,
-                      opacity: 0.9,
+                      opacity: 0.95,
                     }}
                     animate={{
-                      r: 210,
+                      r: 220,
                       opacity: 0,
                     }}
                     transition={{
@@ -762,19 +760,19 @@ export default function BirthdayTree() {
                     pointerEvents="none"
                   />
 
-                  {/* Yeşil shockwave */}
+                  {/* Mint shockwave */}
                   <motion.circle
                     cx={400}
                     cy={300}
                     fill="none"
                     stroke="#34d399"
-                    strokeWidth={3}
+                    strokeWidth={4}
                     initial={{
                       r: 20,
-                      opacity: 0.8,
+                      opacity: 0.9,
                     }}
                     animate={{
-                      r: 270,
+                      r: 280,
                       opacity: 0,
                     }}
                     transition={{
@@ -785,19 +783,19 @@ export default function BirthdayTree() {
                     pointerEvents="none"
                   />
 
-                  {/* Altın shockwave */}
+                  {/* Açık yeşil shockwave */}
                   <motion.circle
                     cx={400}
                     cy={300}
                     fill="none"
-                    stroke="#fbbf24"
-                    strokeWidth={2}
+                    stroke="#86efac"
+                    strokeWidth={3}
                     initial={{
                       r: 10,
-                      opacity: 0.8,
+                      opacity: 0.9,
                     }}
                     animate={{
-                      r: 330,
+                      r: 340,
                       opacity: 0,
                     }}
                     transition={{
@@ -808,17 +806,17 @@ export default function BirthdayTree() {
                     pointerEvents="none"
                   />
 
-                  {/* Merkez ışık */}
+                  {/* Merkez ışığı */}
                   <motion.circle
                     cx={400}
                     cy={300}
-                    fill="#fff"
+                    fill="#ecfdf5"
                     initial={{
                       r: 5,
                       opacity: 1,
                     }}
                     animate={{
-                      r: 70,
+                      r: 75,
                       opacity: 0,
                     }}
                     transition={{
@@ -933,7 +931,7 @@ export default function BirthdayTree() {
 
               <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-white/10">
                 <motion.div
-                  className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-rose-400"
+                  className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-emerald-200"
                   animate={{
                     width: `${
                       totalHearts
