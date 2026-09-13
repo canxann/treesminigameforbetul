@@ -20,15 +20,11 @@ type Burst = {
 
 let burstSeq = 0
 
-/*
- * SADECE 14 DAL:
- *
- * depth 1 = 2 dal
- * depth 2 = 4 dal
- * depth 3 = 8 dal
- *
- * Toplam = 14
- */
+// Sadece 14 dal ışıklı olacak:
+// depth 1 = 2
+// depth 2 = 4
+// depth 3 = 8
+// toplam = 14
 const isLightable = (depth: number) =>
   depth >= 1 && depth <= 3
 
@@ -45,20 +41,20 @@ function BurstGroup({
       (_, i) => {
         const angle =
           (Math.PI * 2 * i) / burst.count +
-          Math.random() * 0.5
+          Math.random() * 0.35
 
         const dist =
-          18 +
+          16 +
           Math.random() *
-            (burst.count > 16 ? 55 : 30)
+            (burst.count > 16 ? 45 : 25)
 
         return {
           dx: Math.cos(angle) * dist,
           dy: Math.sin(angle) * dist,
           r:
-            1.5 +
+            1.2 +
             Math.random() *
-              (burst.count > 16 ? 3.5 : 2.2),
+              (burst.count > 16 ? 2.8 : 1.8),
         }
       },
     )
@@ -74,7 +70,7 @@ function BurstGroup({
           r={p.r}
           fill={burst.color}
           initial={{
-            opacity: 1,
+            opacity: 0.9,
             cx: burst.x,
             cy: burst.y,
           }}
@@ -84,12 +80,8 @@ function BurstGroup({
             cy: burst.y + p.dy,
           }}
           transition={{
-            duration:
-              0.7 + Math.random() * 0.2,
+            duration: 0.55 + Math.random() * 0.2,
             ease: 'easeOut',
-          }}
-          style={{
-            filter: `drop-shadow(0 0 3px ${burst.color})`,
           }}
           onAnimationComplete={
             i === 0
@@ -137,22 +129,11 @@ function Branch({
         lightable && lit
           ? {
               pathLength: 1,
-              opacity: [
-                0.82,
-                1,
-                0.82,
-              ],
-              filter: [
-                'drop-shadow(0 0 3px #f59e0b)',
-                'drop-shadow(0 0 9px #fbbf24)',
-                'drop-shadow(0 0 3px #f59e0b)',
-              ],
+              opacity: [0.72, 1, 0.72],
             }
           : {
               pathLength: 1,
               opacity: 1,
-              filter:
-                'drop-shadow(0 0 0px transparent)',
             }
       }
       transition={
@@ -160,16 +141,11 @@ function Branch({
           ? {
               pathLength: {
                 delay: seg.delay,
-                duration: 0.45,
+                duration: 0.4,
                 ease: 'easeOut',
               },
               opacity: {
-                duration: 1.5,
-                repeat: Infinity,
-                ease: 'easeInOut',
-              },
-              filter: {
-                duration: 1.5,
+                duration: 1.8,
                 repeat: Infinity,
                 ease: 'easeInOut',
               },
@@ -177,11 +153,11 @@ function Branch({
           : {
               pathLength: {
                 delay: seg.delay,
-                duration: 0.45,
+                duration: 0.4,
                 ease: 'easeOut',
               },
               opacity: {
-                duration: 0.25,
+                duration: 0.2,
               },
             }
       }
@@ -203,7 +179,6 @@ function Heart({
         x: heart.x,
         y: heart.y,
         cursor: 'pointer',
-        filter: `drop-shadow(0 0 4px ${heart.color})`,
         touchAction: 'none',
       }}
       initial={{
@@ -245,9 +220,7 @@ export default function BirthdayTree() {
     [],
   )
 
-  /*
-   * BU LİSTE ARTIK SADECE 14 DAL.
-   */
+  // Tam olarak 14 ışıklı dal.
   const lightBranches = useMemo(
     () =>
       segments.filter((segment) =>
@@ -286,7 +259,7 @@ export default function BirthdayTree() {
     x: number,
     y: number,
     color: string,
-    count = 12,
+    count = 8,
   ) => {
     const burst: Burst = {
       id: burstSeq++,
@@ -328,7 +301,7 @@ export default function BirthdayTree() {
       (segment.x1 + segment.x2) / 2,
       (segment.y1 + segment.y2) / 2,
       '#fbbf24',
-      10,
+      8,
     )
   }
 
@@ -350,12 +323,12 @@ export default function BirthdayTree() {
       heart.x,
       heart.y,
       heart.color,
-      12,
+      8,
     )
   }
 
   const lightsOut =
-    extinguished.size === totalLights
+    extinguished.size >= totalLights
 
   useEffect(() => {
     if (!lightsOut) return
@@ -397,21 +370,21 @@ export default function BirthdayTree() {
         400,
         300,
         '#f43f5e',
-        30,
+        18,
       )
 
       spawnBurst(
         400,
         300,
         '#34d399',
-        24,
+        14,
       )
 
       spawnBurst(
         400,
         300,
         '#fb7185',
-        20,
+        12,
       )
 
       setTimeout(
@@ -438,6 +411,7 @@ export default function BirthdayTree() {
         WebkitUserSelect: 'none',
       }}
     >
+      {/* Arka plan */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0"
@@ -448,9 +422,9 @@ export default function BirthdayTree() {
       />
 
       <svg
-        viewBox="120 0 560 600"
+        viewBox="150 20 500 560"
         className="absolute inset-0 h-full w-full"
-        preserveAspectRatio="xMidYMax meet"
+        preserveAspectRatio="xMidYMax slice"
         role="img"
         aria-label="Işıklı doğum günü ağacı"
         style={{
@@ -492,6 +466,7 @@ export default function BirthdayTree() {
           </radialGradient>
         </defs>
 
+        {/* Zemin */}
         <ellipse
           cx={400}
           cy={565}
@@ -501,9 +476,9 @@ export default function BirthdayTree() {
           pointerEvents="none"
         />
 
-        {/* =====================================================
-            GÖRSEL DALLAR
-            ===================================================== */}
+        {/* ================================
+            AĞAÇ
+            ================================ */}
 
         {segments.map((segment) => (
           <Branch
@@ -520,14 +495,10 @@ export default function BirthdayTree() {
           />
         ))}
 
-        {/* =====================================================
-            TELEFON DOKUNMA ALANLARI
-
-            SADECE 14 TANE.
-
-            Hitbox'lar dalların orta noktalarında.
-            Birbirinin üstüne dev alanlarla binmiyorlar.
-            ===================================================== */}
+        {/* ================================
+            TELEFON HITBOX'LARI
+            SADECE 14 TANE
+            ================================ */}
 
         <g
           style={{
@@ -559,7 +530,7 @@ export default function BirthdayTree() {
                   key={`hit-${segment.id}`}
                   cx={x}
                   cy={y}
-                  r={24}
+                  r={26}
                   fill="transparent"
                   stroke="transparent"
                   pointerEvents="all"
@@ -581,9 +552,9 @@ export default function BirthdayTree() {
           )}
         </g>
 
-        {/* =====================================================
+        {/* ================================
             KALPLER
-            ===================================================== */}
+            ================================ */}
 
         {heartsActive &&
           hearts.map(
@@ -599,17 +570,15 @@ export default function BirthdayTree() {
               ),
           )}
 
-        {/* =====================================================
+        {/* ================================
             BÜYÜK KALP
-            ===================================================== */}
+            ================================ */}
 
         <AnimatePresence>
           {bigPhase === 'flying' && (
             <motion.g
               style={{
                 x: 400,
-                filter:
-                  'drop-shadow(0 0 16px #f43f5e)',
               }}
               initial={{
                 y: 660,
@@ -656,17 +625,17 @@ export default function BirthdayTree() {
               fill="#ffffff"
               initial={{
                 r: 0,
-                opacity: 0.9,
+                opacity: 0.8,
               }}
               animate={{
-                r: 260,
+                r: 240,
                 opacity: 0,
               }}
               exit={{
                 opacity: 0,
               }}
               transition={{
-                duration: 0.5,
+                duration: 0.45,
                 ease: 'easeOut',
               }}
               pointerEvents="none"
@@ -674,7 +643,7 @@ export default function BirthdayTree() {
           )}
         </AnimatePresence>
 
-        {/* Patlama */}
+        {/* Patlamalar */}
         {bursts.map((burst) => (
           <BurstGroup
             key={burst.id}
@@ -684,14 +653,14 @@ export default function BirthdayTree() {
         ))}
       </svg>
 
-      {/* =====================================================
+      {/* ================================
           ÜST YAZI
-          ===================================================== */}
+          ================================ */}
 
       <AnimatePresence>
         {!lightsOut && (
           <motion.div
-            className="pointer-events-none absolute left-1/2 top-5 z-20 w-[94%] -translate-x-1/2 text-center sm:top-10"
+            className="pointer-events-none absolute left-1/2 top-5 z-30 w-[94%] -translate-x-1/2 text-center"
             initial={{
               opacity: 0,
               y: -10,
@@ -721,9 +690,12 @@ export default function BirthdayTree() {
         )}
       </AnimatePresence>
 
-      {/* Sayaç */}
+      {/* ================================
+          SOL ÜST - COUNTDOWN
+          ================================ */}
+
       <motion.div
-        className="absolute left-3 top-3 z-20 sm:left-6 sm:top-6"
+        className="absolute left-3 top-3 z-40 sm:left-6 sm:top-6"
         initial={{
           opacity: 0,
           x: -20,
@@ -737,15 +709,18 @@ export default function BirthdayTree() {
             : {}
         }
         transition={{
-          duration: 0.6,
+          duration: 0.5,
         }}
       >
         <Countdown />
       </motion.div>
 
-      {/* Kalp avı */}
+      {/* ================================
+          SAĞ ÜST - KALP AVI
+          ================================ */}
+
       <motion.div
-        className="absolute bottom-4 left-3 z-20 w-[165px] sm:bottom-auto sm:left-auto sm:right-6 sm:top-6 sm:w-[210px]"
+        className="absolute right-3 top-3 z-40 w-[165px] sm:right-6 sm:top-6 sm:w-[210px]"
         initial={{
           opacity: 0,
           x: 20,
@@ -759,39 +734,39 @@ export default function BirthdayTree() {
             : {}
         }
         transition={{
-          duration: 0.6,
+          duration: 0.5,
         }}
       >
-        <div className="rounded-2xl border border-rose-400/20 bg-black/40 p-4 backdrop-blur-md sm:p-5">
+        <div className="rounded-2xl border border-rose-400/20 bg-black/45 p-3 backdrop-blur-md sm:p-5">
           <div className="mb-1 flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-rose-400 shadow-[0_0_8px_2px] shadow-rose-400/60" />
+            <span className="h-2 w-2 rounded-full bg-rose-400" />
 
             <p className="text-xs font-medium uppercase tracking-widest text-rose-100/70">
               Kalp Avı
             </p>
           </div>
 
-          <p className="mb-3 text-sm text-rose-100/50">
+          <p className="mb-2 text-xs text-rose-100/50 sm:mb-3 sm:text-sm">
             Ağaçtaki kalpleri patlat!
           </p>
 
           <div className="flex items-end justify-between">
             <div>
-              <p className="text-3xl font-bold tabular-nums text-rose-300 sm:text-4xl">
+              <p className="text-2xl font-bold tabular-nums text-rose-300 sm:text-4xl">
                 {popped.size}
               </p>
 
-              <p className="text-[10px] uppercase tracking-widest text-rose-100/50">
+              <p className="text-[9px] uppercase tracking-widest text-rose-100/50 sm:text-[10px]">
                 Patlatılan
               </p>
             </div>
 
-            <p className="text-sm text-rose-100/40 tabular-nums">
+            <p className="text-xs text-rose-100/40 tabular-nums sm:text-sm">
               / {totalHearts}
             </p>
           </div>
 
-          <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+          <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-white/10 sm:mt-3">
             <motion.div
               className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-rose-400"
               animate={{
@@ -822,7 +797,7 @@ export default function BirthdayTree() {
                   opacity: 1,
                   y: 0,
                 }}
-                className="mt-3 text-sm font-semibold text-emerald-300"
+                className="mt-2 text-xs font-semibold text-emerald-300 sm:mt-3 sm:text-sm"
               >
                 Hepsini patlattın!
               </motion.p>
