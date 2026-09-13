@@ -156,8 +156,9 @@ export default function Countdown() {
   }
 
   return (
-    <div className="rounded-2xl border border-emerald-400/20 bg-black/40 p-4 backdrop-blur-md sm:p-5">
-      <div className="mb-1 flex items-center gap-2">
+    <div className="rounded-2xl border border-emerald-400/20 bg-black/40 p-4 text-center backdrop-blur-md sm:p-5">
+      {/* BAŞLIK */}
+      <div className="mb-1 flex items-center justify-center gap-2">
         <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_2px] shadow-emerald-400/60" />
 
         <p className="text-xs font-medium uppercase tracking-widest text-emerald-100/70">
@@ -165,16 +166,18 @@ export default function Countdown() {
         </p>
       </div>
 
-      <p className="mb-3 text-sm text-emerald-100/50">
+      {/* TARİH */}
+      <p className="mb-4 text-sm text-emerald-100/50">
         22 Ekim
       </p>
 
+      {/* SAYAÇ */}
       {parts.isToday ? (
         <p className="py-2 text-lg font-bold text-emerald-300">
           İyi ki doğdun! 🎉
         </p>
       ) : (
-        <div className="flex items-start gap-3 sm:gap-4">
+        <div className="flex items-start justify-center gap-3 sm:gap-4">
           <Unit
             value={parts.days}
             label="Gün"
@@ -262,6 +265,7 @@ export default function Countdown() {
                         '',
                       ),
                     )
+
                     setWrongPassword(false)
                   }}
                   onKeyDown={(e) => {
@@ -290,7 +294,7 @@ export default function Countdown() {
             </div>
           )}
 
-        {/* BAŞARILI */}
+        {/* AÇILDI */}
         {unlocked && (
           <p className="mt-2 text-center text-[10px] uppercase tracking-widest text-emerald-300/70">
             Kilit açıldı ✨
