@@ -20,8 +20,17 @@ type Burst = {
 
 let burstSeq = 0
 
-// Gövde hariç bütün dallar söndürülebilir.
-const isLightable = (depth: number) => depth >= 1
+/*
+ * SADECE 14 DAL:
+ *
+ * depth 1 = 2 dal
+ * depth 2 = 4 dal
+ * depth 3 = 8 dal
+ *
+ * Toplam = 14
+ */
+const isLightable = (depth: number) =>
+  depth >= 1 && depth <= 3
 
 function BurstGroup({
   burst,
@@ -31,29 +40,28 @@ function BurstGroup({
   onDone: (id: number) => void
 }) {
   const particles = useMemo(() => {
-    const arr = []
+    return Array.from(
+      { length: burst.count },
+      (_, i) => {
+        const angle =
+          (Math.PI * 2 * i) / burst.count +
+          Math.random() * 0.5
 
-    for (let i = 0; i < burst.count; i++) {
-      const angle =
-        (Math.PI * 2 * i) / burst.count +
-        Math.random() * 0.5
-
-      const dist =
-        18 +
-        Math.random() *
-          (burst.count > 16 ? 55 : 30)
-
-      arr.push({
-        dx: Math.cos(angle) * dist,
-        dy: Math.sin(angle) * dist,
-        r:
-          1.5 +
+        const dist =
+          18 +
           Math.random() *
-            (burst.count > 16 ? 3.5 : 2.2),
-      })
-    }
+            (burst.count > 16 ? 55 : 30)
 
-    return arr
+        return {
+          dx: Math.cos(angle) * dist,
+          dy: Math.sin(angle) * dist,
+          r:
+            1.5 +
+            Math.random() *
+              (burst.count > 16 ? 3.5 : 2.2),
+        }
+      },
+    )
   }, [burst])
 
   return (
@@ -77,7 +85,7 @@ function BurstGroup({
           }}
           transition={{
             duration:
-              0.75 + Math.random() * 0.25,
+              0.7 + Math.random() * 0.2,
             ease: 'easeOut',
           }}
           style={{
@@ -97,11 +105,9 @@ function BurstGroup({
 function Branch({
   seg,
   lit,
-  onExtinguish,
 }: {
   seg: Segment
   lit: boolean
-  onExtinguish: (s: Segment) => void
 }) {
   const lightable = isLightable(seg.depth)
 
@@ -111,106 +117,76 @@ function Branch({
       : '#6b4a2b'
 
   return (
-    <g>
-      {/* 
-        Mobil için dokunma alanı.
-        Görünmezdir ve yalnızca kendi dalını yakalar.
-      */}
-      {lightable && lit && (
-        <line
-          x1={seg.x1}
-          y1={seg.y1}
-          x2={seg.x2}
-          y2={seg.y2}
-          stroke="transparent"
-          strokeWidth={Math.max(
-            seg.width + 14,
-            22,
-          )}
-          strokeLinecap="round"
-          pointerEvents="stroke"
-          style={{
-            cursor: 'pointer',
-            touchAction: 'none',
-          }}
-          onPointerDown={(e) => {
-            e.preventDefault()
-            e.stopPropagation()
-            onExtinguish(seg)
-          }}
-        />
-      )}
-
-      {/* Görünen dal */}
-      <motion.line
-        x1={seg.x1}
-        y1={seg.y1}
-        x2={seg.x2}
-        y2={seg.y2}
-        stroke={
-          lightable && lit
-            ? '#fbbf24'
-            : baseColor
-        }
-        strokeWidth={seg.width}
-        strokeLinecap="round"
-        initial={{
-          pathLength: 0,
-          opacity: 0,
-        }}
-        animate={
-          lightable && lit
-            ? {
-                pathLength: 1,
-                opacity: [
-                  0.85,
-                  1,
-                  0.85,
-                ],
-                filter: [
-                  'drop-shadow(0 0 3px #f59e0b)',
-                  'drop-shadow(0 0 9px #fbbf24)',
-                  'drop-shadow(0 0 3px #f59e0b)',
-                ],
-              }
-            : {
-                pathLength: 1,
-                opacity: 1,
-                filter:
-                  'drop-shadow(0 0 0px transparent)',
-              }
-        }
-        transition={
-          lightable && lit
-            ? {
-                pathLength: {
-                  delay: seg.delay,
-                  duration: 0.6,
-                  ease: 'easeOut',
-                },
-                opacity: {
-                  duration: 1.6,
-                  repeat: Infinity,
-                  ease: 'easeInOut',
-                },
-                filter: {
-                  duration: 1.6,
-                  repeat: Infinity,
-                  ease: 'easeInOut',
-                },
-              }
-            : {
-                pathLength: {
-                  delay: seg.delay,
-                  duration: 0.6,
-                  ease: 'easeOut',
-                },
-                opacity: 1,
-              }
-        }
-        pointerEvents="none"
-      />
-    </g>
+    <motion.line
+      x1={seg.x1}
+      y1={seg.y1}
+      x2={seg.x2}
+      y2={seg.y2}
+      stroke={
+        lightable && lit
+          ? '#fbbf24'
+          : baseColor
+      }
+      strokeWidth={seg.width}
+      strokeLinecap="round"
+      initial={{
+        pathLength: 0,
+        opacity: 0,
+      }}
+      animate={
+        lightable && lit
+          ? {
+              pathLength: 1,
+              opacity: [
+                0.82,
+                1,
+                0.82,
+              ],
+              filter: [
+                'drop-shadow(0 0 3px #f59e0b)',
+                'drop-shadow(0 0 9px #fbbf24)',
+                'drop-shadow(0 0 3px #f59e0b)',
+              ],
+            }
+          : {
+              pathLength: 1,
+              opacity: 1,
+              filter:
+                'drop-shadow(0 0 0px transparent)',
+            }
+      }
+      transition={
+        lightable && lit
+          ? {
+              pathLength: {
+                delay: seg.delay,
+                duration: 0.45,
+                ease: 'easeOut',
+              },
+              opacity: {
+                duration: 1.5,
+                repeat: Infinity,
+                ease: 'easeInOut',
+              },
+              filter: {
+                duration: 1.5,
+                repeat: Infinity,
+                ease: 'easeInOut',
+              },
+            }
+          : {
+              pathLength: {
+                delay: seg.delay,
+                duration: 0.45,
+                ease: 'easeOut',
+              },
+              opacity: {
+                duration: 0.25,
+              },
+            }
+      }
+      pointerEvents="none"
+    />
   )
 }
 
@@ -237,9 +213,6 @@ function Heart({
       animate={{
         scale: heart.size,
         opacity: 1,
-      }}
-      whileHover={{
-        scale: heart.size * 1.35,
       }}
       whileTap={{
         scale: heart.size * 0.5,
@@ -272,17 +245,19 @@ export default function BirthdayTree() {
     [],
   )
 
-  const totalHearts = hearts.length
-
+  /*
+   * BU LİSTE ARTIK SADECE 14 DAL.
+   */
   const lightBranches = useMemo(
     () =>
-      segments.filter((s) =>
-        isLightable(s.depth),
+      segments.filter((segment) =>
+        isLightable(segment.depth),
       ),
     [segments],
   )
 
   const totalLights = lightBranches.length
+  const totalHearts = hearts.length
 
   const [extinguished, setExtinguished] =
     useState<Set<number>>(new Set())
@@ -330,7 +305,7 @@ export default function BirthdayTree() {
   const removeBurst = (id: number) => {
     setBursts((prev) =>
       prev.filter(
-        (b) => b.id !== id,
+        (burst) => burst.id !== id,
       ),
     )
   }
@@ -380,7 +355,7 @@ export default function BirthdayTree() {
   }
 
   const lightsOut =
-    extinguished.size >= totalLights
+    extinguished.size === totalLights
 
   useEffect(() => {
     if (!lightsOut) return
@@ -452,20 +427,17 @@ export default function BirthdayTree() {
 
   const allPopped =
     heartsActive &&
-    totalHearts -
-      popped.size ===
-      0
+    popped.size === totalHearts
 
   return (
     <main
       className="relative min-h-svh w-full overflow-hidden bg-black"
       style={{
         touchAction: 'none',
-        WebkitUserSelect: 'none',
         userSelect: 'none',
+        WebkitUserSelect: 'none',
       }}
     >
-      {/* Arka plan */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0"
@@ -476,11 +448,11 @@ export default function BirthdayTree() {
       />
 
       <svg
-        viewBox="0 0 800 600"
+        viewBox="120 0 560 600"
         className="absolute inset-0 h-full w-full"
         preserveAspectRatio="xMidYMax meet"
         role="img"
-        aria-label="Işıklı dalları olan doğum günü ağacı"
+        aria-label="Işıklı doğum günü ağacı"
         style={{
           touchAction: 'none',
         }}
@@ -520,7 +492,6 @@ export default function BirthdayTree() {
           </radialGradient>
         </defs>
 
-        {/* Zemin */}
         <ellipse
           cx={400}
           cy={565}
@@ -530,7 +501,10 @@ export default function BirthdayTree() {
           pointerEvents="none"
         />
 
-        {/* Ağaç dalları */}
+        {/* =====================================================
+            GÖRSEL DALLAR
+            ===================================================== */}
+
         {segments.map((segment) => (
           <Branch
             key={segment.id}
@@ -543,13 +517,74 @@ export default function BirthdayTree() {
                 segment.id,
               )
             }
-            onExtinguish={
-              extinguishBranch
-            }
           />
         ))}
 
-        {/* Kalpler */}
+        {/* =====================================================
+            TELEFON DOKUNMA ALANLARI
+
+            SADECE 14 TANE.
+
+            Hitbox'lar dalların orta noktalarında.
+            Birbirinin üstüne dev alanlarla binmiyorlar.
+            ===================================================== */}
+
+        <g
+          style={{
+            touchAction: 'none',
+          }}
+        >
+          {lightBranches.map(
+            (segment) => {
+              if (
+                extinguished.has(
+                  segment.id,
+                )
+              ) {
+                return null
+              }
+
+              const x =
+                (segment.x1 +
+                  segment.x2) /
+                2
+
+              const y =
+                (segment.y1 +
+                  segment.y2) /
+                2
+
+              return (
+                <circle
+                  key={`hit-${segment.id}`}
+                  cx={x}
+                  cy={y}
+                  r={24}
+                  fill="transparent"
+                  stroke="transparent"
+                  pointerEvents="all"
+                  style={{
+                    touchAction: 'none',
+                    cursor: 'pointer',
+                  }}
+                  onPointerDown={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+
+                    extinguishBranch(
+                      segment,
+                    )
+                  }}
+                />
+              )
+            },
+          )}
+        </g>
+
+        {/* =====================================================
+            KALPLER
+            ===================================================== */}
+
         {heartsActive &&
           hearts.map(
             (heart) =>
@@ -564,7 +599,10 @@ export default function BirthdayTree() {
               ),
           )}
 
-        {/* Büyük kalp */}
+        {/* =====================================================
+            BÜYÜK KALP
+            ===================================================== */}
+
         <AnimatePresence>
           {bigPhase === 'flying' && (
             <motion.g
@@ -636,7 +674,7 @@ export default function BirthdayTree() {
           )}
         </AnimatePresence>
 
-        {/* Patlama parçacıkları */}
+        {/* Patlama */}
         {bursts.map((burst) => (
           <BurstGroup
             key={burst.id}
@@ -646,11 +684,14 @@ export default function BirthdayTree() {
         ))}
       </svg>
 
-      {/* Üst yazı */}
+      {/* =====================================================
+          ÜST YAZI
+          ===================================================== */}
+
       <AnimatePresence>
         {!lightsOut && (
           <motion.div
-            className="pointer-events-none absolute left-1/2 top-6 z-10 w-[94%] -translate-x-1/2 text-center sm:top-10"
+            className="pointer-events-none absolute left-1/2 top-5 z-20 w-[94%] -translate-x-1/2 text-center sm:top-10"
             initial={{
               opacity: 0,
               y: -10,
@@ -682,7 +723,7 @@ export default function BirthdayTree() {
 
       {/* Sayaç */}
       <motion.div
-        className="absolute left-4 top-4 z-10 sm:left-6 sm:top-6"
+        className="absolute left-3 top-3 z-20 sm:left-6 sm:top-6"
         initial={{
           opacity: 0,
           x: -20,
@@ -704,7 +745,7 @@ export default function BirthdayTree() {
 
       {/* Kalp avı */}
       <motion.div
-        className="absolute left-4 bottom-20 z-10 w-[170px] sm:left-auto sm:bottom-auto sm:right-6 sm:top-6 sm:w-[210px]"
+        className="absolute bottom-4 left-3 z-20 w-[165px] sm:bottom-auto sm:left-auto sm:right-6 sm:top-6 sm:w-[210px]"
         initial={{
           opacity: 0,
           x: 20,
@@ -755,7 +796,7 @@ export default function BirthdayTree() {
               className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-rose-400"
               animate={{
                 width: `${
-                  totalHearts > 0
+                  totalHearts
                     ? (popped.size /
                         totalHearts) *
                       100
