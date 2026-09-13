@@ -2,7 +2,12 @@
 
 import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect, useMemo, useState } from 'react'
-import { generateTree, HEART_PATH, type HeartData, type Segment } from '@/lib/tree'
+import {
+  generateTree,
+  HEART_PATH,
+  type HeartData,
+  type Segment,
+} from '@/lib/tree'
 import Countdown from '@/components/countdown'
 
 type Burst = {
@@ -15,7 +20,7 @@ type Burst = {
 
 let burstSeq = 0
 
-// Depth 1 ve üzerindeki bütün dallar söndürülebilir.
+// Ağacın gövdesi hariç bütün dallar söndürülebilir.
 const isLightable = (depth: number) => depth >= 1
 
 function BurstGroup({
@@ -49,7 +54,7 @@ function BurstGroup({
   }, [burst])
 
   return (
-    <g>
+    <g pointerEvents="none">
       {particles.map((p, i) => (
         <motion.circle
           key={i}
@@ -96,38 +101,68 @@ function Branch({
 }) {
   const lightable = isLightable(seg.depth)
 
+  if (!lightable) {
+    return (
+      <motion.line
+        x1={seg.x1}
+        y1={seg.y1}
+        x2={seg.x2}
+        y2={seg.y2}
+        stroke="url(#trunk)"
+        strokeWidth={seg.width}
+        strokeLinecap="round"
+        initial={{
+          pathLength: 0,
+          opacity: 0,
+        }}
+        animate={{
+          pathLength: 1,
+          opacity: 1,
+        }}
+        transition={{
+          pathLength: {
+            delay: seg.delay,
+            duration: 0.6,
+            ease: 'easeOut',
+          },
+        }}
+        pointerEvents="none"
+      />
+    )
+  }
+
   const baseColor =
     seg.depth <= 1
       ? 'url(#trunk)'
       : '#6b4a2b'
 
   const extinguish = (
-    e?: React.PointerEvent<SVGElement>,
+    e: React.PointerEvent<SVGLineElement>,
   ) => {
-    if (!lightable || !lit) return
+    e.preventDefault()
+    e.stopPropagation()
 
-    e?.preventDefault()
-    e?.stopPropagation()
+    if (!lit) return
 
     onExtinguish(seg)
   }
 
   return (
     <g>
-      {/* Telefonda kolay dokunmak için görünmez geniş alan */}
-      {lightable && lit && (
+      {/* Telefonda çok daha büyük dokunma alanı */}
+      {lit && (
         <line
           x1={seg.x1}
           y1={seg.y1}
           x2={seg.x2}
           y2={seg.y2}
           stroke="transparent"
-          strokeWidth={Math.max(seg.width + 35, 42)}
+          strokeWidth={Math.max(seg.width + 50, 58)}
           strokeLinecap="round"
+          pointerEvents="stroke"
           style={{
             cursor: 'pointer',
             touchAction: 'none',
-            pointerEvents: 'stroke',
           }}
           onPointerDown={extinguish}
         />
@@ -192,15 +227,7 @@ function Branch({
                 duration: 0.4,
               }
         }
-        style={
-          lightable && lit
-            ? {
-                cursor: 'pointer',
-                touchAction: 'none',
-                pointerEvents: 'none',
-              }
-            : undefined
-        }
+        pointerEvents="none"
       />
     </g>
   )
@@ -508,7 +535,7 @@ export default function BirthdayTree() {
           fill="url(#ground)"
         />
 
-        {/* Tree branches */}
+        {/* Tree */}
         {segments.map((s) => (
           <Branch
             key={s.id}
@@ -617,11 +644,11 @@ export default function BirthdayTree() {
         ))}
       </svg>
 
-      {/* Intro prompt */}
+      {/* Intro */}
       <AnimatePresence>
         {!lightsOut && (
           <motion.div
-            className="pointer-events-none absolute left-1/2 top-6 z-10 -translate-x-1/2 text-center sm:top-10"
+            className="pointer-events-none absolute left-1/2 top-6 z-10 w-[92%] -translate-x-1/2 text-center sm:top-10"
             initial={{
               opacity: 0,
               y: -10,
@@ -640,8 +667,11 @@ export default function BirthdayTree() {
             </p>
 
             <p className="mt-1 text-xs uppercase tracking-widest text-amber-100/50 tabular-nums">
-              {totalLights -
-                extinguished.size}{' '}
+              {Math.max(
+                totalLights -
+                  extinguished.size,
+                0,
+              )}{' '}
               dal kaldı
             </p>
           </motion.div>
