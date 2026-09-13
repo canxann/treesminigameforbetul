@@ -1,22 +1,13 @@
 'use client'
 
-import {
-  AnimatePresence,
-  motion,
-} from 'framer-motion'
-import {
-  useEffect,
-  useMemo,
-  useState,
-} from 'react'
-
+import { AnimatePresence, motion } from 'framer-motion'
+import { useEffect, useMemo, useState } from 'react'
 import {
   generateTree,
   HEART_PATH,
   type HeartData,
   type Segment,
 } from '@/lib/tree'
-
 import Countdown from '@/components/countdown'
 
 type Burst = {
@@ -25,15 +16,13 @@ type Burst = {
   y: number
   color: string
   count: number
+  size?: 'normal' | 'big'
 }
 
 let burstSeq = 0
 
-const isLightable = (
-  depth: number,
-) =>
-  depth >= 1 &&
-  depth <= 3
+const isLightable = (depth: number) =>
+  depth >= 1 && depth <= 3
 
 function BurstGroup({
   burst,
@@ -44,37 +33,34 @@ function BurstGroup({
 }) {
   const particles = useMemo(() => {
     return Array.from(
-      {
-        length: burst.count,
-      },
+      { length: burst.count },
       (_, i) => {
         const angle =
-          (Math.PI * 2 * i) /
-            burst.count +
-          Math.random() * 0.35
+          (Math.PI * 2 * i) / burst.count +
+          (Math.random() - 0.5) * 0.25
 
-        const dist =
-          14 +
-          Math.random() *
-            (burst.count > 16
-              ? 42
-              : 24)
+        const distance =
+          burst.size === 'big'
+            ? 45 + Math.random() * 115
+            : 20 + Math.random() * 55
+
+        const isHeart =
+          burst.size === 'big' &&
+          Math.random() < 0.22
 
         return {
-          dx:
-            Math.cos(angle) *
-            dist,
-
-          dy:
-            Math.sin(angle) *
-            dist,
-
+          dx: Math.cos(angle) * distance,
+          dy: Math.sin(angle) * distance,
           r:
-            1.2 +
-            Math.random() *
-              (burst.count > 16
-                ? 2.8
-                : 1.8),
+            burst.size === 'big'
+              ? 1.5 + Math.random() * 3.5
+              : 1.2 + Math.random() * 1.8,
+          scale:
+            0.35 + Math.random() * 0.7,
+          rotation: Math.random() * 360,
+          isHeart,
+          duration:
+            0.7 + Math.random() * 0.65,
         }
       },
     )
@@ -82,8 +68,47 @@ function BurstGroup({
 
   return (
     <g pointerEvents="none">
-      {particles.map(
-        (p, i) => (
+      {particles.map((p, i) => {
+        if (p.isHeart) {
+          return (
+            <motion.g
+              key={i}
+              initial={{
+                x: burst.x,
+                y: burst.y,
+                opacity: 1,
+                scale: 0.2,
+                rotate: p.rotation,
+              }}
+              animate={{
+                x: burst.x + p.dx,
+                y: burst.y + p.dy,
+                opacity: 0,
+                scale: p.scale,
+                rotate: p.rotation + 180,
+              }}
+              transition={{
+                duration: p.duration,
+                ease: 'easeOut',
+              }}
+              onAnimationComplete={
+                i === 0
+                  ? () => onDone(burst.id)
+                  : undefined
+              }
+            >
+              <path
+                d={HEART_PATH}
+                fill={burst.color}
+                stroke="#fff"
+                strokeOpacity={0.25}
+                strokeWidth={0.3}
+              />
+            </motion.g>
+          )
+        }
+
+        return (
           <motion.circle
             key={i}
             cx={burst.x}
@@ -91,37 +116,29 @@ function BurstGroup({
             r={p.r}
             fill={burst.color}
             initial={{
-              opacity: 0.9,
+              opacity: 1,
               cx: burst.x,
               cy: burst.y,
+              scale: 0.4,
             }}
             animate={{
               opacity: 0,
-              cx:
-                burst.x +
-                p.dx,
-              cy:
-                burst.y +
-                p.dy,
+              cx: burst.x + p.dx,
+              cy: burst.y + p.dy,
+              scale: 1,
             }}
             transition={{
-              duration:
-                0.55 +
-                Math.random() *
-                  0.2,
+              duration: p.duration,
               ease: 'easeOut',
             }}
             onAnimationComplete={
               i === 0
-                ? () =>
-                    onDone(
-                      burst.id,
-                    )
+                ? () => onDone(burst.id)
                 : undefined
             }
           />
-        ),
-      )}
+        )
+      })}
     </g>
   )
 }
@@ -133,8 +150,7 @@ function Branch({
   seg: Segment
   lit: boolean
 }) {
-  const lightable =
-    isLightable(seg.depth)
+  const lightable = isLightable(seg.depth)
 
   const baseColor =
     seg.depth <= 1
@@ -162,11 +178,7 @@ function Branch({
         lightable && lit
           ? {
               pathLength: 1,
-              opacity: [
-                0.72,
-                1,
-                0.72,
-              ],
+              opacity: [0.72, 1, 0.72],
             }
           : {
               pathLength: 1,
@@ -208,9 +220,7 @@ function Heart({
   onPop,
 }: {
   heart: HeartData
-  onPop: (
-    heart: HeartData,
-  ) => void
+  onPop: (h: HeartData) => void
 }) {
   return (
     <motion.g
@@ -229,8 +239,7 @@ function Heart({
         opacity: 1,
       }}
       whileTap={{
-        scale:
-          heart.size * 0.5,
+        scale: heart.size * 0.5,
       }}
       transition={{
         delay: heart.delay,
@@ -255,25 +264,18 @@ function Heart({
 }
 
 export default function BirthdayTree() {
-  const {
-    segments,
-    hearts,
-  } = useMemo(
+  const { segments, hearts } = useMemo(
     () => generateTree(7),
     [],
   )
 
-  const lightBranches =
-    useMemo(
-      () =>
-        segments.filter(
-          (segment) =>
-            isLightable(
-              segment.depth,
-            ),
-        ),
-      [segments],
-    )
+  const lightBranches = useMemo(
+    () =>
+      segments.filter((segment) =>
+        isLightable(segment.depth),
+      ),
+    [segments],
+  )
 
   const totalLights =
     lightBranches.length
@@ -281,33 +283,22 @@ export default function BirthdayTree() {
   const totalHearts =
     hearts.length
 
-  const [
-    extinguished,
-    setExtinguished,
-  ] =
-    useState<Set<number>>(
-      new Set(),
-    )
+  const [extinguished, setExtinguished] =
+    useState<Set<number>>(new Set())
 
   const [popped, setPopped] =
-    useState<Set<number>>(
-      new Set(),
-    )
+    useState<Set<number>>(new Set())
 
   const [bursts, setBursts] =
     useState<Burst[]>([])
 
-  const [
-    heartsActive,
-    setHeartsActive,
-  ] = useState(false)
+  const [heartsActive, setHeartsActive] =
+    useState(false)
 
-  const [
-    bigPhase,
-    setBigPhase,
-  ] = useState<
-    'hidden' | 'flying' | 'gone'
-  >('hidden')
+  const [bigPhase, setBigPhase] =
+    useState<
+      'hidden' | 'flying' | 'gone'
+    >('hidden')
 
   const [flash, setFlash] =
     useState(false)
@@ -320,6 +311,7 @@ export default function BirthdayTree() {
     y: number,
     color: string,
     count = 8,
+    size: 'normal' | 'big' = 'normal',
   ) => {
     const burst: Burst = {
       id: burstSeq++,
@@ -327,6 +319,7 @@ export default function BirthdayTree() {
       y,
       color,
       count,
+      size,
     }
 
     setBursts((prev) => [
@@ -335,13 +328,10 @@ export default function BirthdayTree() {
     ])
   }
 
-  const removeBurst = (
-    id: number,
-  ) => {
+  const removeBurst = (id: number) => {
     setBursts((prev) =>
       prev.filter(
-        (burst) =>
-          burst.id !== id,
+        (burst) => burst.id !== id,
       ),
     )
   }
@@ -349,31 +339,20 @@ export default function BirthdayTree() {
   const extinguishBranch = (
     segment: Segment,
   ) => {
-    setExtinguished(
-      (prev) => {
-        if (
-          prev.has(segment.id)
-        ) {
-          return prev
-        }
+    setExtinguished((prev) => {
+      if (prev.has(segment.id)) {
+        return prev
+      }
 
-        const next = new Set(
-          prev,
-        )
+      const next = new Set(prev)
+      next.add(segment.id)
 
-        next.add(segment.id)
-
-        return next
-      },
-    )
+      return next
+    })
 
     spawnBurst(
-      (segment.x1 +
-        segment.x2) /
-        2,
-      (segment.y1 +
-        segment.y2) /
-        2,
+      (segment.x1 + segment.x2) / 2,
+      (segment.y1 + segment.y2) / 2,
       '#fbbf24',
       8,
     )
@@ -383,16 +362,11 @@ export default function BirthdayTree() {
     heart: HeartData,
   ) => {
     setPopped((prev) => {
-      if (
-        prev.has(heart.id)
-      ) {
+      if (prev.has(heart.id)) {
         return prev
       }
 
-      const next = new Set(
-        prev,
-      )
-
+      const next = new Set(prev)
       next.add(heart.id)
 
       return next
@@ -407,89 +381,86 @@ export default function BirthdayTree() {
   }
 
   const lightsOut =
-    extinguished.size >=
-    totalLights
+    extinguished.size >= totalLights
 
   const allPopped =
     heartsActive &&
-    popped.size >=
-      totalHearts
+    popped.size >= totalHearts
 
   useEffect(() => {
     if (!lightsOut) return
 
-    const timer =
-      setTimeout(() => {
-        setHeartsActive(true)
-      }, 350)
+    const timer = setTimeout(() => {
+      setHeartsActive(true)
+    }, 350)
 
-    return () =>
-      clearTimeout(timer)
+    return () => clearTimeout(timer)
   }, [lightsOut])
 
   useEffect(() => {
     if (!allPopped) return
-    if (
-      bigPhase !==
-      'hidden'
-    ) {
-      return
-    }
+    if (bigPhase !== 'hidden') return
 
-    const timer =
-      setTimeout(() => {
-        setBigPhase('flying')
-      }, 500)
+    const timer = setTimeout(() => {
+      setBigPhase('flying')
+    }, 500)
 
-    return () =>
-      clearTimeout(timer)
-  }, [
-    allPopped,
-    bigPhase,
-  ])
+    return () => clearTimeout(timer)
+  }, [allPopped, bigPhase])
 
-  // Büyük kalbin ekran içindeki merkezi.
-  // SVG koordinat sisteminde ağacın merkeziyle uyumlu.
-  const FINAL_X = 400
-  const FINAL_Y = 280
+  const onBigHeartArrived = () => {
+    setFlash(true)
 
-  const onBigHeartArrived =
-    () => {
-      setFlash(true)
+    // ANA PEMBE PATLAMA
+    spawnBurst(
+      400,
+      300,
+      '#f43f5e',
+      70,
+      'big',
+    )
 
-      spawnBurst(
-        FINAL_X,
-        FINAL_Y,
-        '#f43f5e',
-        26,
-      )
+    // YEŞİL IŞIK
+    spawnBurst(
+      400,
+      300,
+      '#34d399',
+      45,
+      'big',
+    )
 
-      spawnBurst(
-        FINAL_X,
-        FINAL_Y,
-        '#34d399',
-        20,
-      )
+    // ALTIN PARILTILAR
+    spawnBurst(
+      400,
+      300,
+      '#fbbf24',
+      35,
+      'big',
+    )
 
-      spawnBurst(
-        FINAL_X,
-        FINAL_Y,
-        '#fb7185',
-        18,
-      )
+    // BEYAZ YILDIZLAR
+    spawnBurst(
+      400,
+      300,
+      '#ffffff',
+      30,
+      'big',
+    )
 
-      setTimeout(() => {
-        setBigPhase('gone')
-      }, 120)
+    setTimeout(() => {
+      setBigPhase('gone')
+    }, 180)
 
-      setTimeout(() => {
-        setFlash(false)
-      }, 500)
+    setTimeout(() => {
+      setFlash(false)
+    }, 650)
 
-      setTimeout(() => {
-        setFinale(true)
-      }, 650)
-    }
+    // Patlamanın tamamen hissedilmesi için
+    // sayaç biraz daha geç gelir.
+    setTimeout(() => {
+      setFinale(true)
+    }, 1500)
+  }
 
   return (
     <main
@@ -497,27 +468,26 @@ export default function BirthdayTree() {
       style={{
         touchAction: 'none',
         userSelect: 'none',
-        WebkitUserSelect:
-          'none',
+        WebkitUserSelect: 'none',
       }}
     >
-      {/* Arka plan */}
+      {/* ARKA PLAN */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            'radial-gradient(60% 50% at 50% 72%, rgba(16,185,129,0.14), transparent 70%)',
+            'radial-gradient(60% 50% at 50% 78%, rgba(16,185,129,0.14), transparent 70%)',
         }}
       />
 
-      {/* AĞAÇ */}
+      {/* AĞAÇ + KALPLER */}
       <AnimatePresence>
         {!finale && (
           <motion.svg
-            viewBox="120 0 560 560"
+            viewBox="155 35 490 525"
             className="absolute inset-0 h-full w-full"
-            preserveAspectRatio="xMidYMid meet"
+            preserveAspectRatio="xMidYMax meet"
             role="img"
             aria-label="Işıklı doğum günü ağacı"
             initial={{
@@ -575,39 +545,35 @@ export default function BirthdayTree() {
               </radialGradient>
             </defs>
 
-            {/* Zemin */}
             <ellipse
               cx={400}
-              cy={555}
+              cy={565}
               rx={210}
               ry={24}
               fill="url(#ground)"
               pointerEvents="none"
             />
 
-            {/* Ağaç dalları */}
-            {segments.map(
-              (segment) => (
-                <Branch
-                  key={segment.id}
-                  seg={segment}
-                  lit={
-                    isLightable(
-                      segment.depth,
-                    ) &&
-                    !extinguished.has(
-                      segment.id,
-                    )
-                  }
-                />
-              ),
-            )}
+            {/* AĞAÇ DALLARI */}
+            {segments.map((segment) => (
+              <Branch
+                key={segment.id}
+                seg={segment}
+                lit={
+                  isLightable(
+                    segment.depth,
+                  ) &&
+                  !extinguished.has(
+                    segment.id,
+                  )
+                }
+              />
+            ))}
 
-            {/* Geniş mobil dokunma alanları */}
+            {/* TELEFON DOKUNMA ALANLARI */}
             <g
               style={{
-                touchAction:
-                  'none',
+                touchAction: 'none',
               }}
             >
               {lightBranches.map(
@@ -629,18 +595,15 @@ export default function BirthdayTree() {
                       y2={segment.y2}
                       stroke="transparent"
                       strokeWidth={Math.max(
-                        segment.width +
-                          30,
+                        segment.width + 30,
                         38,
                       )}
                       strokeLinecap="round"
                       fill="none"
                       pointerEvents="stroke"
                       style={{
-                        touchAction:
-                          'none',
-                        cursor:
-                          'pointer',
+                        touchAction: 'none',
+                        cursor: 'pointer',
                       }}
                       onPointerDown={(
                         e,
@@ -658,7 +621,7 @@ export default function BirthdayTree() {
               )}
             </g>
 
-            {/* Küçük kalpler */}
+            {/* KÜÇÜK KALPLER */}
             {heartsActive &&
               hearts.map(
                 (heart) =>
@@ -666,106 +629,215 @@ export default function BirthdayTree() {
                     heart.id,
                   ) && (
                     <Heart
-                      key={
-                        heart.id
-                      }
-                      heart={
-                        heart
-                      }
-                      onPop={
-                        popHeart
-                      }
+                      key={heart.id}
+                      heart={heart}
+                      onPop={popHeart}
                     />
                   ),
               )}
 
-            {/* Büyük final kalbi */}
+            {/* BÜYÜK FİNAL KALBİ */}
             <AnimatePresence>
               {bigPhase ===
                 'flying' && (
                 <motion.g
                   style={{
-                    x: FINAL_X,
+                    x: 400,
                   }}
                   initial={{
-                    y: 570,
+                    y: 650,
                     scale: 0.3,
                     opacity: 0,
                   }}
                   animate={{
-                    y: FINAL_Y,
-                    scale: 6,
-                    opacity: 1,
+                    y: 300,
+                    scale: [
+                      5.2,
+                      6.2,
+                      5.8,
+                      6.5,
+                    ],
+                    opacity: [
+                      0,
+                      1,
+                      1,
+                      1,
+                    ],
                   }}
                   exit={{
                     opacity: 0,
                     scale: 8,
                   }}
                   transition={{
-                    duration: 0.9,
-                    ease: [
-                      0.22,
-                      1,
-                      0.36,
+                    duration: 1.15,
+                    times: [
+                      0,
+                      0.45,
+                      0.7,
                       1,
                     ],
+                    ease: 'easeInOut',
                   }}
                   onAnimationComplete={
                     onBigHeartArrived
                   }
                 >
                   <path
-                    d={
-                      HEART_PATH
-                    }
+                    d={HEART_PATH}
                     fill="#f43f5e"
                     stroke="#fecdd3"
                     strokeWidth={0.5}
+                  />
+
+                  {/* Kalbin iç parıltısı */}
+                  <motion.path
+                    d={HEART_PATH}
+                    fill="none"
+                    stroke="#ffffff"
+                    strokeWidth={0.7}
+                    initial={{
+                      opacity: 0.2,
+                    }}
+                    animate={{
+                      opacity: [
+                        0.2,
+                        0.9,
+                        0.3,
+                        1,
+                      ],
+                    }}
+                    transition={{
+                      duration: 0.9,
+                      repeat: 1,
+                      ease: 'easeInOut',
+                    }}
                   />
                 </motion.g>
               )}
             </AnimatePresence>
 
-            {/* Büyük patlama */}
+            {/* ŞAŞALI FİNAL PATLAMASI */}
             <AnimatePresence>
               {flash && (
-                <motion.circle
-                  cx={FINAL_X}
-                  cy={FINAL_Y}
-                  fill="#ffffff"
-                  initial={{
-                    r: 0,
-                    opacity: 0.85,
-                  }}
-                  animate={{
-                    r: 260,
-                    opacity: 0,
-                  }}
-                  exit={{
-                    opacity: 0,
-                  }}
-                  transition={{
-                    duration: 0.5,
-                    ease: 'easeOut',
-                  }}
-                  pointerEvents="none"
-                />
+                <>
+                  {/* Beyaz flash */}
+                  <motion.circle
+                    cx={400}
+                    cy={300}
+                    fill="#ffffff"
+                    initial={{
+                      r: 0,
+                      opacity: 0.95,
+                    }}
+                    animate={{
+                      r: 300,
+                      opacity: 0,
+                    }}
+                    transition={{
+                      duration: 0.65,
+                      ease: 'easeOut',
+                    }}
+                    pointerEvents="none"
+                  />
+
+                  {/* Pembe shockwave */}
+                  <motion.circle
+                    cx={400}
+                    cy={300}
+                    fill="none"
+                    stroke="#fb7185"
+                    strokeWidth={4}
+                    initial={{
+                      r: 15,
+                      opacity: 0.9,
+                    }}
+                    animate={{
+                      r: 210,
+                      opacity: 0,
+                    }}
+                    transition={{
+                      duration: 0.9,
+                      ease: 'easeOut',
+                    }}
+                    pointerEvents="none"
+                  />
+
+                  {/* Yeşil shockwave */}
+                  <motion.circle
+                    cx={400}
+                    cy={300}
+                    fill="none"
+                    stroke="#34d399"
+                    strokeWidth={3}
+                    initial={{
+                      r: 20,
+                      opacity: 0.8,
+                    }}
+                    animate={{
+                      r: 270,
+                      opacity: 0,
+                    }}
+                    transition={{
+                      duration: 1.1,
+                      delay: 0.08,
+                      ease: 'easeOut',
+                    }}
+                    pointerEvents="none"
+                  />
+
+                  {/* Altın shockwave */}
+                  <motion.circle
+                    cx={400}
+                    cy={300}
+                    fill="none"
+                    stroke="#fbbf24"
+                    strokeWidth={2}
+                    initial={{
+                      r: 10,
+                      opacity: 0.8,
+                    }}
+                    animate={{
+                      r: 330,
+                      opacity: 0,
+                    }}
+                    transition={{
+                      duration: 1.3,
+                      delay: 0.12,
+                      ease: 'easeOut',
+                    }}
+                    pointerEvents="none"
+                  />
+
+                  {/* Merkez ışık */}
+                  <motion.circle
+                    cx={400}
+                    cy={300}
+                    fill="#fff"
+                    initial={{
+                      r: 5,
+                      opacity: 1,
+                    }}
+                    animate={{
+                      r: 70,
+                      opacity: 0,
+                    }}
+                    transition={{
+                      duration: 0.45,
+                      ease: 'easeOut',
+                    }}
+                    pointerEvents="none"
+                  />
+                </>
               )}
             </AnimatePresence>
 
-            {/* Parçacıklar */}
+            {/* PARÇACIKLAR */}
             {bursts.map(
               (burst) => (
                 <BurstGroup
-                  key={
-                    burst.id
-                  }
-                  burst={
-                    burst
-                  }
-                  onDone={
-                    removeBurst
-                  }
+                  key={burst.id}
+                  burst={burst}
+                  onDone={removeBurst}
                 />
               ),
             )}
@@ -818,14 +890,8 @@ export default function BirthdayTree() {
               x: 20,
             }}
             animate={{
-              opacity:
-                heartsActive
-                  ? 1
-                  : 0,
-              x:
-                heartsActive
-                  ? 0
-                  : 20,
+              opacity: heartsActive ? 1 : 0,
+              x: heartsActive ? 0 : 20,
             }}
             exit={{
               opacity: 0,
@@ -889,7 +955,7 @@ export default function BirthdayTree() {
         )}
       </AnimatePresence>
 
-      {/* FİNAL SAYAÇ */}
+      {/* FİNAL: SADECE SAYAÇ */}
       <AnimatePresence>
         {finale && (
           <motion.div
@@ -907,7 +973,9 @@ export default function BirthdayTree() {
               ease: 'easeOut',
             }}
           >
-            <Countdown />
+            <div className="text-center">
+              <Countdown />
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
