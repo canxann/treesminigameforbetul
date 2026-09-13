@@ -20,11 +20,7 @@ type Burst = {
 
 let burstSeq = 0
 
-// Sadece 14 dal ışıklı olacak:
-// depth 1 = 2
-// depth 2 = 4
-// depth 3 = 8
-// toplam = 14
+// 2 + 4 + 8 = 14 ışıklı dal
 const isLightable = (depth: number) =>
   depth >= 1 && depth <= 3
 
@@ -44,9 +40,9 @@ function BurstGroup({
           Math.random() * 0.35
 
         const dist =
-          16 +
+          14 +
           Math.random() *
-            (burst.count > 16 ? 45 : 25)
+            (burst.count > 16 ? 42 : 24)
 
         return {
           dx: Math.cos(angle) * dist,
@@ -220,7 +216,6 @@ export default function BirthdayTree() {
     [],
   )
 
-  // Tam olarak 14 ışıklı dal.
   const lightBranches = useMemo(
     () =>
       segments.filter((segment) =>
@@ -229,8 +224,11 @@ export default function BirthdayTree() {
     [segments],
   )
 
-  const totalLights = lightBranches.length
-  const totalHearts = hearts.length
+  const totalLights =
+    lightBranches.length
+
+  const totalHearts =
+    hearts.length
 
   const [extinguished, setExtinguished] =
     useState<Set<number>>(new Set())
@@ -252,7 +250,7 @@ export default function BirthdayTree() {
   const [flash, setFlash] =
     useState(false)
 
-  const [uiVisible, setUiVisible] =
+  const [finale, setFinale] =
     useState(false)
 
   const spawnBurst = (
@@ -330,38 +328,43 @@ export default function BirthdayTree() {
   const lightsOut =
     extinguished.size >= totalLights
 
+  const allPopped =
+    heartsActive &&
+    popped.size >= totalHearts
+
+  /*
+   * Önce dallar söner.
+   * Sonra kalpler gelir.
+   */
   useEffect(() => {
     if (!lightsOut) return
 
-    const timers: ReturnType<
-      typeof setTimeout
-    >[] = []
+    const timer = setTimeout(() => {
+      setHeartsActive(true)
+    }, 350)
 
-    timers.push(
-      setTimeout(
-        () => setHeartsActive(true),
-        350,
-      ),
-    )
-
-    timers.push(
-      setTimeout(
-        () => setBigPhase('flying'),
-        1700,
-      ),
-    )
-
-    timers.push(
-      setTimeout(
-        () => setUiVisible(true),
-        3000,
-      ),
-    )
-
-    return () =>
-      timers.forEach(clearTimeout)
+    return () => clearTimeout(timer)
   }, [lightsOut])
 
+  /*
+   * Bütün küçük kalpler bitince
+   * büyük kalbi başlat.
+   */
+  useEffect(() => {
+    if (!allPopped) return
+    if (bigPhase !== 'hidden') return
+
+    const timer = setTimeout(() => {
+      setBigPhase('flying')
+    }, 500)
+
+    return () => clearTimeout(timer)
+  }, [allPopped, bigPhase])
+
+  /*
+   * Büyük kalp merkeze geldiğinde
+   * patlama + final ekranı.
+   */
   const onBigHeartArrived =
     () => {
       setFlash(true)
@@ -370,37 +373,39 @@ export default function BirthdayTree() {
         400,
         300,
         '#f43f5e',
-        18,
+        26,
       )
 
       spawnBurst(
         400,
         300,
         '#34d399',
-        14,
+        20,
       )
 
       spawnBurst(
         400,
         300,
         '#fb7185',
-        12,
+        18,
       )
 
-      setTimeout(
-        () => setBigPhase('gone'),
-        120,
-      )
+      setTimeout(() => {
+        setBigPhase('gone')
+      }, 120)
 
-      setTimeout(
-        () => setFlash(false),
-        500,
-      )
+      setTimeout(() => {
+        setFlash(false)
+      }, 500)
+
+      /*
+       * Biraz bekleyip ağacı ve
+       * Kalp Avı'nı tamamen kaldır.
+       */
+      setTimeout(() => {
+        setFinale(true)
+      }, 650)
     }
-
-  const allPopped =
-    heartsActive &&
-    popped.size === totalHearts
 
   return (
     <main
@@ -411,7 +416,10 @@ export default function BirthdayTree() {
         WebkitUserSelect: 'none',
       }}
     >
-      {/* Arka plan */}
+      {/* =========================
+          ARKA PLAN
+          ========================= */}
+
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0"
@@ -421,390 +429,403 @@ export default function BirthdayTree() {
         }}
       />
 
-      <svg
-        viewBox="150 20 500 560"
-        className="absolute inset-0 h-full w-full"
-        preserveAspectRatio="xMidYMax slice"
-        role="img"
-        aria-label="Işıklı doğum günü ağacı"
-        style={{
-          touchAction: 'none',
-        }}
-      >
-        <defs>
-          <linearGradient
-            id="trunk"
-            x1="0"
-            y1="0"
-            x2="0"
-            y2="1"
-          >
-            <stop
-              offset="0%"
-              stopColor="#8b5e34"
-            />
-            <stop
-              offset="100%"
-              stopColor="#5c3d1e"
-            />
-          </linearGradient>
-
-          <radialGradient
-            id="ground"
-            cx="50%"
-            cy="50%"
-            r="50%"
-          >
-            <stop
-              offset="0%"
-              stopColor="rgba(16,185,129,0.35)"
-            />
-            <stop
-              offset="100%"
-              stopColor="rgba(16,185,129,0)"
-            />
-          </radialGradient>
-        </defs>
-
-        {/* Zemin */}
-        <ellipse
-          cx={400}
-          cy={565}
-          rx={230}
-          ry={26}
-          fill="url(#ground)"
-          pointerEvents="none"
-        />
-
-        {/* ================================
-            AĞAÇ
-            ================================ */}
-
-        {segments.map((segment) => (
-          <Branch
-            key={segment.id}
-            seg={segment}
-            lit={
-              isLightable(
-                segment.depth,
-              ) &&
-              !extinguished.has(
-                segment.id,
-              )
-            }
-          />
-        ))}
-
-        {/* ================================
-            TELEFON HITBOX'LARI
-            SADECE 14 TANE
-            ================================ */}
-
-        <g
-          style={{
-            touchAction: 'none',
-          }}
-        >
-          {lightBranches.map(
-            (segment) => {
-              if (
-                extinguished.has(
-                  segment.id,
-                )
-              ) {
-                return null
-              }
-
-              const x =
-                (segment.x1 +
-                  segment.x2) /
-                2
-
-              const y =
-                (segment.y1 +
-                  segment.y2) /
-                2
-
-              return (
-                <circle
-                  key={`hit-${segment.id}`}
-                  cx={x}
-                  cy={y}
-                  r={26}
-                  fill="transparent"
-                  stroke="transparent"
-                  pointerEvents="all"
-                  style={{
-                    touchAction: 'none',
-                    cursor: 'pointer',
-                  }}
-                  onPointerDown={(e) => {
-                    e.preventDefault()
-                    e.stopPropagation()
-
-                    extinguishBranch(
-                      segment,
-                    )
-                  }}
-                />
-              )
-            },
-          )}
-        </g>
-
-        {/* ================================
-            KALPLER
-            ================================ */}
-
-        {heartsActive &&
-          hearts.map(
-            (heart) =>
-              !popped.has(
-                heart.id,
-              ) && (
-                <Heart
-                  key={heart.id}
-                  heart={heart}
-                  onPop={popHeart}
-                />
-              ),
-          )}
-
-        {/* ================================
-            BÜYÜK KALP
-            ================================ */}
-
-        <AnimatePresence>
-          {bigPhase === 'flying' && (
-            <motion.g
-              style={{
-                x: 400,
-              }}
-              initial={{
-                y: 660,
-                scale: 0.3,
-                opacity: 0,
-              }}
-              animate={{
-                y: 300,
-                scale: 6.5,
-                opacity: 1,
-              }}
-              exit={{
-                opacity: 0,
-              }}
-              transition={{
-                duration: 0.9,
-                ease: [
-                  0.22,
-                  1,
-                  0.36,
-                  1,
-                ],
-              }}
-              onAnimationComplete={
-                onBigHeartArrived
-              }
-            >
-              <path
-                d={HEART_PATH}
-                fill="#f43f5e"
-                stroke="#fecdd3"
-                strokeWidth={0.5}
-              />
-            </motion.g>
-          )}
-        </AnimatePresence>
-
-        {/* Flash */}
-        <AnimatePresence>
-          {flash && (
-            <motion.circle
-              cx={400}
-              cy={300}
-              fill="#ffffff"
-              initial={{
-                r: 0,
-                opacity: 0.8,
-              }}
-              animate={{
-                r: 240,
-                opacity: 0,
-              }}
-              exit={{
-                opacity: 0,
-              }}
-              transition={{
-                duration: 0.45,
-                ease: 'easeOut',
-              }}
-              pointerEvents="none"
-            />
-          )}
-        </AnimatePresence>
-
-        {/* Patlamalar */}
-        {bursts.map((burst) => (
-          <BurstGroup
-            key={burst.id}
-            burst={burst}
-            onDone={removeBurst}
-          />
-        ))}
-      </svg>
-
-      {/* ================================
-          ÜST YAZI
-          ================================ */}
+      {/* =========================
+          AĞAÇ + KALPLER
+          ========================= */}
 
       <AnimatePresence>
-        {!lightsOut && (
-          <motion.div
-            className="pointer-events-none absolute left-1/2 top-5 z-30 w-[94%] -translate-x-1/2 text-center"
+        {!finale && (
+          <motion.svg
+            viewBox="155 35 490 525"
+            className="absolute inset-0 h-full w-full"
+            preserveAspectRatio="xMidYMax meet"
+            role="img"
+            aria-label="Işıklı doğum günü ağacı"
             initial={{
-              opacity: 0,
-              y: -10,
+              opacity: 1,
             }}
             animate={{
               opacity: 1,
-              y: 0,
             }}
             exit={{
               opacity: 0,
-              y: -10,
+              scale: 0.96,
+            }}
+            transition={{
+              duration: 0.55,
+              ease: 'easeOut',
+            }}
+            style={{
+              touchAction: 'none',
             }}
           >
-            <p className="text-base font-semibold tracking-wide text-amber-200 sm:text-xl">
-              Işıyan dallara dokun ve söndür Betül
-            </p>
+            <defs>
+              <linearGradient
+                id="trunk"
+                x1="0"
+                y1="0"
+                x2="0"
+                y2="1"
+              >
+                <stop
+                  offset="0%"
+                  stopColor="#8b5e34"
+                />
 
-            <p className="mt-1 text-xs uppercase tracking-widest text-amber-100/50 tabular-nums">
-              {Math.max(
-                totalLights -
-                  extinguished.size,
-                0,
-              )}{' '}
-              dal kaldı
-            </p>
+                <stop
+                  offset="100%"
+                  stopColor="#5c3d1e"
+                />
+              </linearGradient>
+
+              <radialGradient
+                id="ground"
+                cx="50%"
+                cy="50%"
+                r="50%"
+              >
+                <stop
+                  offset="0%"
+                  stopColor="rgba(16,185,129,0.35)"
+                />
+
+                <stop
+                  offset="100%"
+                  stopColor="rgba(16,185,129,0)"
+                />
+              </radialGradient>
+            </defs>
+
+            <ellipse
+              cx={400}
+              cy={565}
+              rx={210}
+              ry={24}
+              fill="url(#ground)"
+              pointerEvents="none"
+            />
+
+            {/* Ağaç dalları */}
+            {segments.map((segment) => (
+              <Branch
+                key={segment.id}
+                seg={segment}
+                lit={
+                  isLightable(
+                    segment.depth,
+                  ) &&
+                  !extinguished.has(
+                    segment.id,
+                  )
+                }
+              />
+            ))}
+
+            {/* Telefon için geniş dokunma alanları */}
+            <g
+              style={{
+                touchAction: 'none',
+              }}
+            >
+              {lightBranches.map(
+                (segment) => {
+                  if (
+                    extinguished.has(
+                      segment.id,
+                    )
+                  ) {
+                    return null
+                  }
+
+                  return (
+                    <circle
+                      key={`hit-${segment.id}`}
+                      cx={
+                        (segment.x1 +
+                          segment.x2) /
+                        2
+                      }
+                      cy={
+                        (segment.y1 +
+                          segment.y2) /
+                        2
+                      }
+                      r={27}
+                      fill="transparent"
+                      pointerEvents="all"
+                      style={{
+                        touchAction: 'none',
+                        cursor: 'pointer',
+                      }}
+                      onPointerDown={(
+                        e,
+                      ) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+
+                        extinguishBranch(
+                          segment,
+                        )
+                      }}
+                    />
+                  )
+                },
+              )}
+            </g>
+
+            {/* Küçük kalpler */}
+            {heartsActive &&
+              hearts.map(
+                (heart) =>
+                  !popped.has(
+                    heart.id,
+                  ) && (
+                    <Heart
+                      key={heart.id}
+                      heart={heart}
+                      onPop={popHeart}
+                    />
+                  ),
+              )}
+
+            {/* Büyük final kalbi */}
+            <AnimatePresence>
+              {bigPhase ===
+                'flying' && (
+                <motion.g
+                  style={{
+                    x: 400,
+                  }}
+                  initial={{
+                    y: 650,
+                    scale: 0.3,
+                    opacity: 0,
+                  }}
+                  animate={{
+                    y: 300,
+                    scale: 6,
+                    opacity: 1,
+                  }}
+                  exit={{
+                    opacity: 0,
+                    scale: 8,
+                  }}
+                  transition={{
+                    duration: 0.9,
+                    ease: [
+                      0.22,
+                      1,
+                      0.36,
+                      1,
+                    ],
+                  }}
+                  onAnimationComplete={
+                    onBigHeartArrived
+                  }
+                >
+                  <path
+                    d={HEART_PATH}
+                    fill="#f43f5e"
+                    stroke="#fecdd3"
+                    strokeWidth={0.5}
+                  />
+                </motion.g>
+              )}
+            </AnimatePresence>
+
+            {/* Final patlama */}
+            <AnimatePresence>
+              {flash && (
+                <motion.circle
+                  cx={400}
+                  cy={300}
+                  fill="#ffffff"
+                  initial={{
+                    r: 0,
+                    opacity: 0.85,
+                  }}
+                  animate={{
+                    r: 260,
+                    opacity: 0,
+                  }}
+                  exit={{
+                    opacity: 0,
+                  }}
+                  transition={{
+                    duration: 0.5,
+                    ease: 'easeOut',
+                  }}
+                  pointerEvents="none"
+                />
+              )}
+            </AnimatePresence>
+
+            {/* Parçacıklar */}
+            {bursts.map(
+              (burst) => (
+                <BurstGroup
+                  key={burst.id}
+                  burst={burst}
+                  onDone={removeBurst}
+                />
+              ),
+            )}
+          </motion.svg>
+        )}
+      </AnimatePresence>
+
+      {/* =========================
+          ÜST YAZI
+          ========================= */}
+
+      <AnimatePresence>
+        {!lightsOut &&
+          !finale && (
+            <motion.div
+              className="pointer-events-none absolute left-1/2 top-5 z-30 w-[94%] -translate-x-1/2 text-center"
+              initial={{
+                opacity: 0,
+                y: -10,
+              }}
+              animate={{
+                opacity: 1,
+                y: 0,
+              }}
+              exit={{
+                opacity: 0,
+                y: -10,
+              }}
+            >
+              <p className="text-base font-semibold tracking-wide text-amber-200 sm:text-xl">
+                Işıyan dallara dokun ve söndür Betül
+              </p>
+
+              <p className="mt-1 text-xs uppercase tracking-widest text-amber-100/50 tabular-nums">
+                {Math.max(
+                  totalLights -
+                    extinguished.size,
+                  0,
+                )}{' '}
+                dal kaldı
+              </p>
+            </motion.div>
+          )}
+      </AnimatePresence>
+
+      {/* =========================
+          KALP AVI
+          ========================= */}
+
+      <AnimatePresence>
+        {!finale && (
+          <motion.div
+            className="absolute right-2 top-2 z-40 w-[135px] sm:right-6 sm:top-6 sm:w-[190px]"
+            initial={{
+              opacity: 0,
+              x: 20,
+            }}
+            animate={{
+              opacity:
+                uiVisible ||
+                heartsActive
+                  ? 1
+                  : 0,
+              x:
+                uiVisible ||
+                heartsActive
+                  ? 0
+                  : 20,
+            }}
+            exit={{
+              opacity: 0,
+              x: 20,
+              scale: 0.9,
+            }}
+            transition={{
+              duration: 0.4,
+            }}
+          >
+            <div className="rounded-xl border border-rose-400/20 bg-black/45 p-2.5 backdrop-blur-md sm:rounded-2xl sm:p-4">
+              <div className="mb-1 flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-rose-400 sm:h-2 sm:w-2" />
+
+                <p className="text-[9px] font-medium uppercase tracking-widest text-rose-100/70 sm:text-xs">
+                  Kalp Avı
+                </p>
+              </div>
+
+              <p className="mb-2 text-[10px] text-rose-100/50 sm:mb-3 sm:text-xs">
+                Kalpleri patlat!
+              </p>
+
+              <div className="flex items-end justify-between">
+                <div>
+                  <p className="text-xl font-bold tabular-nums text-rose-300 sm:text-3xl">
+                    {popped.size}
+                  </p>
+
+                  <p className="text-[8px] uppercase tracking-widest text-rose-100/50">
+                    Patlatılan
+                  </p>
+                </div>
+
+                <p className="text-[10px] text-rose-100/40 tabular-nums sm:text-xs">
+                  / {totalHearts}
+                </p>
+              </div>
+
+              <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-white/10">
+                <motion.div
+                  className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-rose-400"
+                  animate={{
+                    width: `${
+                      totalHearts
+                        ? (popped.size /
+                            totalHearts) *
+                          100
+                        : 0
+                    }%`,
+                  }}
+                  transition={{
+                    type: 'spring',
+                    stiffness: 200,
+                    damping: 20,
+                  }}
+                />
+              </div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* ================================
-          SOL ÜST - COUNTDOWN
-          ================================ */}
+      {/* =========================
+          SADECE SONDA ORTAYA ÇIKAN
+          SAYAÇ
+          ========================= */}
 
-      <motion.div
-        className="absolute left-3 top-3 z-40 sm:left-6 sm:top-6"
-        initial={{
-          opacity: 0,
-          x: -20,
-        }}
-        animate={
-          uiVisible
-            ? {
-                opacity: 1,
-                x: 0,
-              }
-            : {}
-        }
-        transition={{
-          duration: 0.5,
-        }}
-      >
-        <Countdown />
-      </motion.div>
-
-      {/* ================================
-          SAĞ ÜST - KALP AVI
-          ================================ */}
-
-      <motion.div
-        className="absolute right-3 top-3 z-40 w-[165px] sm:right-6 sm:top-6 sm:w-[210px]"
-        initial={{
-          opacity: 0,
-          x: 20,
-        }}
-        animate={
-          uiVisible
-            ? {
-                opacity: 1,
-                x: 0,
-              }
-            : {}
-        }
-        transition={{
-          duration: 0.5,
-        }}
-      >
-        <div className="rounded-2xl border border-rose-400/20 bg-black/45 p-3 backdrop-blur-md sm:p-5">
-          <div className="mb-1 flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-rose-400" />
-
-            <p className="text-xs font-medium uppercase tracking-widest text-rose-100/70">
-              Kalp Avı
-            </p>
-          </div>
-
-          <p className="mb-2 text-xs text-rose-100/50 sm:mb-3 sm:text-sm">
-            Ağaçtaki kalpleri patlat!
-          </p>
-
-          <div className="flex items-end justify-between">
-            <div>
-              <p className="text-2xl font-bold tabular-nums text-rose-300 sm:text-4xl">
-                {popped.size}
-              </p>
-
-              <p className="text-[9px] uppercase tracking-widest text-rose-100/50 sm:text-[10px]">
-                Patlatılan
-              </p>
+      <AnimatePresence>
+        {finale && (
+          <motion.div
+            className="absolute inset-0 z-50 flex items-center justify-center"
+            initial={{
+              opacity: 0,
+              scale: 0.9,
+            }}
+            animate={{
+              opacity: 1,
+              scale: 1,
+            }}
+            transition={{
+              duration: 0.7,
+              ease: 'easeOut',
+            }}
+          >
+            <div className="text-center">
+              <Countdown />
             </div>
-
-            <p className="text-xs text-rose-100/40 tabular-nums sm:text-sm">
-              / {totalHearts}
-            </p>
-          </div>
-
-          <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-white/10 sm:mt-3">
-            <motion.div
-              className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-rose-400"
-              animate={{
-                width: `${
-                  totalHearts
-                    ? (popped.size /
-                        totalHearts) *
-                      100
-                    : 0
-                }%`,
-              }}
-              transition={{
-                type: 'spring',
-                stiffness: 200,
-                damping: 20,
-              }}
-            />
-          </div>
-
-          <AnimatePresence>
-            {allPopped && (
-              <motion.p
-                initial={{
-                  opacity: 0,
-                  y: 6,
-                }}
-                animate={{
-                  opacity: 1,
-                  y: 0,
-                }}
-                className="mt-2 text-xs font-semibold text-emerald-300 sm:mt-3 sm:text-sm"
-              >
-                Hepsini patlattın!
-              </motion.p>
-            )}
-          </AnimatePresence>
-        </div>
-      </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </main>
   )
 }
