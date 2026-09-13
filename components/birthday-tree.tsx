@@ -15,8 +15,8 @@ type Burst = {
 
 let burstSeq = 0
 
-// Which branches glow and can be tapped to extinguish.
-const isLightable = (depth: number) => depth >= 1 && depth <= 3
+// Depth 1 ve üzerindeki bütün dallar söndürülebilir.
+const isLightable = (depth: number) => depth >= 1
 
 function BurstGroup({
   burst,
@@ -114,7 +114,7 @@ function Branch({
 
   return (
     <g>
-      {/* Invisible larger touch area for phones */}
+      {/* Telefonda kolay dokunmak için görünmez geniş alan */}
       {lightable && lit && (
         <line
           x1={seg.x1}
@@ -122,7 +122,7 @@ function Branch({
           x2={seg.x2}
           y2={seg.y2}
           stroke="transparent"
-          strokeWidth={Math.max(seg.width + 22, 28)}
+          strokeWidth={Math.max(seg.width + 35, 42)}
           strokeLinecap="round"
           style={{
             cursor: 'pointer',
@@ -133,7 +133,7 @@ function Branch({
         />
       )}
 
-      {/* Visible branch */}
+      {/* Görünen dal */}
       <motion.line
         x1={seg.x1}
         y1={seg.y1}
@@ -461,6 +461,8 @@ export default function BirthdayTree() {
         aria-label="Işıklı dalları olan doğum günü ağacı"
         style={{
           touchAction: 'none',
+          transform: 'scale(1.4)',
+          transformOrigin: 'center bottom',
         }}
       >
         <defs>
@@ -634,7 +636,7 @@ export default function BirthdayTree() {
             }}
           >
             <p className="text-base font-semibold tracking-wide text-amber-200 sm:text-xl">
-              Işıyan dallara dokun ve söndür
+              Işıyan dallara dokun ve söndür Betül
             </p>
 
             <p className="mt-1 text-xs uppercase tracking-widest text-amber-100/50 tabular-nums">
