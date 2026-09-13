@@ -20,7 +20,7 @@ type Burst = {
 
 let burstSeq = 0
 
-// Depth 1 + 2 + 3 = ışıklı dallar
+// Depth 1 + 2 + 3 = 14 ışıklı dal
 const isLightable = (depth: number) =>
   depth >= 1 && depth <= 3
 
@@ -355,40 +355,29 @@ export default function BirthdayTree() {
     return () => clearTimeout(timer)
   }, [allPopped, bigPhase])
 
-  // Büyük kalp telefon ekranının ortasına gelince patlar.
+  // Büyük kalp merkeze gelince patla.
   const onBigHeartArrived = () => {
     setFlash(true)
 
-    // Büyük pembe patlama
     spawnBurst(
       400,
       300,
       '#f43f5e',
-      32,
+      26,
     )
 
-    // Yeşil parçacıklar
     spawnBurst(
       400,
       300,
       '#34d399',
-      24,
+      20,
     )
 
-    // Açık pembe parçacıklar
     spawnBurst(
       400,
       300,
       '#fb7185',
-      22,
-    )
-
-    // Altın parçacıklar
-    spawnBurst(
-      400,
-      300,
-      '#fbbf24',
-      16,
+      18,
     )
 
     setTimeout(() => {
@@ -579,11 +568,52 @@ export default function BirthdayTree() {
                   ),
               )}
 
-            {/* SVG içindeki eski büyük kalp
-                artık kullanılmıyor. Büyük kalp
-                aşağıda fixed olarak çiziliyor. */}
+            {/* Büyük final kalbi */}
+            <AnimatePresence>
+              {bigPhase ===
+                'flying' && (
+                <motion.g
+                  style={{
+                    x: 400,
+                  }}
+                  initial={{
+                    y: 650,
+                    scale: 0.3,
+                    opacity: 0,
+                  }}
+                  animate={{
+                    y: 300,
+                    scale: 6,
+                    opacity: 1,
+                  }}
+                  exit={{
+                    opacity: 0,
+                    scale: 8,
+                  }}
+                  transition={{
+                    duration: 0.9,
+                    ease: [
+                      0.22,
+                      1,
+                      0.36,
+                      1,
+                    ],
+                  }}
+                  onAnimationComplete={
+                    onBigHeartArrived
+                  }
+                >
+                  <path
+                    d={HEART_PATH}
+                    fill="#f43f5e"
+                    stroke="#fecdd3"
+                    strokeWidth={0.5}
+                  />
+                </motion.g>
+              )}
+            </AnimatePresence>
 
-            {/* Final patlama ışığı */}
+            {/* Final patlama */}
             <AnimatePresence>
               {flash && (
                 <motion.circle
@@ -595,14 +625,14 @@ export default function BirthdayTree() {
                     opacity: 0.85,
                   }}
                   animate={{
-                    r: 280,
+                    r: 260,
                     opacity: 0,
                   }}
                   exit={{
                     opacity: 0,
                   }}
                   transition={{
-                    duration: 0.55,
+                    duration: 0.5,
                     ease: 'easeOut',
                   }}
                   pointerEvents="none"
@@ -621,145 +651,6 @@ export default function BirthdayTree() {
               ),
             )}
           </motion.svg>
-        )}
-      </AnimatePresence>
-
-      {/* BÜYÜK FİNAL KALBİ
-          Telefon ekranının gerçek merkezinde */}
-      <AnimatePresence>
-        {bigPhase === 'flying' && (
-          <motion.div
-            className="pointer-events-none fixed inset-0 z-[60] flex items-center justify-center"
-            initial={{
-              opacity: 0,
-            }}
-            animate={{
-              opacity: 1,
-            }}
-            exit={{
-              opacity: 0,
-            }}
-          >
-            <motion.div
-              className="relative flex items-center justify-center"
-              initial={{
-                scale: 0.15,
-                opacity: 0,
-                y: 100,
-                rotate: -10,
-              }}
-              animate={{
-                scale: [
-                  0.15,
-                  0.95,
-                  1.15,
-                  1,
-                ],
-                opacity: 1,
-                y: 0,
-                rotate: [
-                  -10,
-                  5,
-                  -2,
-                  0,
-                ],
-              }}
-              exit={{
-                scale: 2.8,
-                opacity: 0,
-              }}
-              transition={{
-                duration: 1,
-                ease: [
-                  0.22,
-                  1,
-                  0.36,
-                  1,
-                ],
-              }}
-              onAnimationComplete={
-                onBigHeartArrived
-              }
-              style={{
-                filter:
-                  'drop-shadow(0 0 12px rgba(244,63,94,0.95)) drop-shadow(0 0 30px rgba(244,63,94,0.75)) drop-shadow(0 0 70px rgba(244,63,94,0.45))',
-              }}
-            >
-              {/* Kalp parlaması */}
-              <motion.div
-                className="absolute rounded-full bg-rose-400/30 blur-2xl"
-                style={{
-                  width: '110px',
-                  height: '110px',
-                }}
-                animate={{
-                  scale: [
-                    0.8,
-                    1.25,
-                    0.9,
-                  ],
-                  opacity: [
-                    0.35,
-                    0.7,
-                    0.35,
-                  ],
-                }}
-                transition={{
-                  duration: 1,
-                  repeat: Infinity,
-                  ease: 'easeInOut',
-                }}
-              />
-
-              <svg
-                width="170"
-                height="170"
-                viewBox="0 0 100 100"
-                className="relative overflow-visible"
-              >
-                <defs>
-                  <linearGradient
-                    id="bigHeartGradient"
-                    x1="0"
-                    y1="0"
-                    x2="1"
-                    y2="1"
-                  >
-                    <stop
-                      offset="0%"
-                      stopColor="#fb7185"
-                    />
-
-                    <stop
-                      offset="45%"
-                      stopColor="#f43f5e"
-                    />
-
-                    <stop
-                      offset="100%"
-                      stopColor="#be123c"
-                    />
-                  </linearGradient>
-                </defs>
-
-                <path
-                  d={HEART_PATH}
-                  fill="url(#bigHeartGradient)"
-                  stroke="#fecdd3"
-                  strokeWidth="0.9"
-                />
-
-                {/* Kalp üzerindeki parlak çizgi */}
-                <path
-                  d={HEART_PATH}
-                  fill="none"
-                  stroke="rgba(255,255,255,0.75)"
-                  strokeWidth="0.5"
-                  opacity="0.8"
-                />
-              </svg>
-            </motion.div>
-          </motion.div>
         )}
       </AnimatePresence>
 
