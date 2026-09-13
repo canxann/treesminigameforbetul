@@ -20,7 +20,7 @@ type Burst = {
 
 let burstSeq = 0
 
-// 2 + 4 + 8 = 14 ışıklı dal
+// Depth 1 + 2 + 3 = 14 ışıklı dal
 const isLightable = (depth: number) =>
   depth >= 1 && depth <= 3
 
@@ -332,10 +332,7 @@ export default function BirthdayTree() {
     heartsActive &&
     popped.size >= totalHearts
 
-  /*
-   * Önce dallar söner.
-   * Sonra kalpler gelir.
-   */
+  // Dallar tamamen sönünce kalpleri göster.
   useEffect(() => {
     if (!lightsOut) return
 
@@ -346,10 +343,7 @@ export default function BirthdayTree() {
     return () => clearTimeout(timer)
   }, [lightsOut])
 
-  /*
-   * Bütün küçük kalpler bitince
-   * büyük kalbi başlat.
-   */
+  // Tüm kalpler bitince büyük kalbi başlat.
   useEffect(() => {
     if (!allPopped) return
     if (bigPhase !== 'hidden') return
@@ -361,51 +355,44 @@ export default function BirthdayTree() {
     return () => clearTimeout(timer)
   }, [allPopped, bigPhase])
 
-  /*
-   * Büyük kalp merkeze geldiğinde
-   * patlama + final ekranı.
-   */
-  const onBigHeartArrived =
-    () => {
-      setFlash(true)
+  // Büyük kalp merkeze gelince patla.
+  const onBigHeartArrived = () => {
+    setFlash(true)
 
-      spawnBurst(
-        400,
-        300,
-        '#f43f5e',
-        26,
-      )
+    spawnBurst(
+      400,
+      300,
+      '#f43f5e',
+      26,
+    )
 
-      spawnBurst(
-        400,
-        300,
-        '#34d399',
-        20,
-      )
+    spawnBurst(
+      400,
+      300,
+      '#34d399',
+      20,
+    )
 
-      spawnBurst(
-        400,
-        300,
-        '#fb7185',
-        18,
-      )
+    spawnBurst(
+      400,
+      300,
+      '#fb7185',
+      18,
+    )
 
-      setTimeout(() => {
-        setBigPhase('gone')
-      }, 120)
+    setTimeout(() => {
+      setBigPhase('gone')
+    }, 120)
 
-      setTimeout(() => {
-        setFlash(false)
-      }, 500)
+    setTimeout(() => {
+      setFlash(false)
+    }, 500)
 
-      /*
-       * Biraz bekleyip ağacı ve
-       * Kalp Avı'nı tamamen kaldır.
-       */
-      setTimeout(() => {
-        setFinale(true)
-      }, 650)
-    }
+    // Patlamadan sonra sadece sayaç kalacak.
+    setTimeout(() => {
+      setFinale(true)
+    }, 650)
+  }
 
   return (
     <main
@@ -416,10 +403,7 @@ export default function BirthdayTree() {
         WebkitUserSelect: 'none',
       }}
     >
-      {/* =========================
-          ARKA PLAN
-          ========================= */}
-
+      {/* Arka plan */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0"
@@ -429,10 +413,7 @@ export default function BirthdayTree() {
         }}
       />
 
-      {/* =========================
-          AĞAÇ + KALPLER
-          ========================= */}
-
+      {/* AĞAÇ + KALPLER */}
       <AnimatePresence>
         {!finale && (
           <motion.svg
@@ -538,21 +519,20 @@ export default function BirthdayTree() {
                   }
 
                   return (
-                    <circle
+                    <line
                       key={`hit-${segment.id}`}
-                      cx={
-                        (segment.x1 +
-                          segment.x2) /
-                        2
-                      }
-                      cy={
-                        (segment.y1 +
-                          segment.y2) /
-                        2
-                      }
-                      r={27}
-                      fill="transparent"
-                      pointerEvents="all"
+                      x1={segment.x1}
+                      y1={segment.y1}
+                      x2={segment.x2}
+                      y2={segment.y2}
+                      stroke="transparent"
+                      strokeWidth={Math.max(
+                        segment.width + 30,
+                        38,
+                      )}
+                      strokeLinecap="round"
+                      fill="none"
+                      pointerEvents="stroke"
                       style={{
                         touchAction: 'none',
                         cursor: 'pointer',
@@ -674,10 +654,7 @@ export default function BirthdayTree() {
         )}
       </AnimatePresence>
 
-      {/* =========================
-          ÜST YAZI
-          ========================= */}
-
+      {/* ÜST YAZI */}
       <AnimatePresence>
         {!lightsOut &&
           !finale && (
@@ -712,10 +689,7 @@ export default function BirthdayTree() {
           )}
       </AnimatePresence>
 
-      {/* =========================
-          KALP AVI
-          ========================= */}
-
+      {/* KALP AVI */}
       <AnimatePresence>
         {!finale && (
           <motion.div
@@ -725,16 +699,8 @@ export default function BirthdayTree() {
               x: 20,
             }}
             animate={{
-              opacity:
-                uiVisible ||
-                heartsActive
-                  ? 1
-                  : 0,
-              x:
-                uiVisible ||
-                heartsActive
-                  ? 0
-                  : 20,
+              opacity: heartsActive ? 1 : 0,
+              x: heartsActive ? 0 : 20,
             }}
             exit={{
               opacity: 0,
@@ -798,11 +764,7 @@ export default function BirthdayTree() {
         )}
       </AnimatePresence>
 
-      {/* =========================
-          SADECE SONDA ORTAYA ÇIKAN
-          SAYAÇ
-          ========================= */}
-
+      {/* FİNAL: SADECE SAYAÇ */}
       <AnimatePresence>
         {finale && (
           <motion.div
