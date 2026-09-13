@@ -32,35 +32,32 @@ function BurstGroup({
   onDone: (id: number) => void
 }) {
   const particles = useMemo(() => {
-    return Array.from(
-      { length: burst.count },
-      (_, i) => {
-        const angle =
-          (Math.PI * 2 * i) / burst.count +
-          (Math.random() - 0.5) * 0.3
+    return Array.from({ length: burst.count }, (_, i) => {
+      const angle =
+        (Math.PI * 2 * i) / burst.count +
+        (Math.random() - 0.5) * 0.22
 
-        const distance =
+      const distance =
+        burst.size === 'big'
+          ? 55 + Math.random() * 165
+          : burst.size === 'normal'
+            ? 20 + Math.random() * 45
+            : 12 + Math.random() * 25
+
+      return {
+        dx: Math.cos(angle) * distance,
+        dy: Math.sin(angle) * distance,
+        r:
           burst.size === 'big'
-            ? 50 + Math.random() * 145
-            : burst.size === 'normal'
-              ? 18 + Math.random() * 42
-              : 12 + Math.random() * 24
-
-        return {
-          dx: Math.cos(angle) * distance,
-          dy: Math.sin(angle) * distance,
-          r:
-            burst.size === 'big'
-              ? 1.3 + Math.random() * 3.5
-              : 1 + Math.random() * 2,
-          duration:
-            burst.size === 'big'
-              ? 0.75 + Math.random() * 0.65
-              : 0.5 + Math.random() * 0.3,
-          rotation: Math.random() * 360,
-        }
-      },
-    )
+            ? 1.4 + Math.random() * 3.2
+            : 1 + Math.random() * 2,
+        duration:
+          burst.size === 'big'
+            ? 0.8 + Math.random() * 0.7
+            : 0.5 + Math.random() * 0.35,
+        rotation: Math.random() * 360,
+      }
+    })
   }, [burst])
 
   return (
@@ -72,19 +69,15 @@ function BurstGroup({
             x: burst.x,
             y: burst.y,
             opacity: 1,
-            scale: 0.25,
+            scale: 0.2,
             rotate: p.rotation,
           }}
           animate={{
             x: burst.x + p.dx,
             y: burst.y + p.dy,
             opacity: 0,
-            scale:
-              burst.size === 'big'
-                ? 1
-                : 0.8,
-            rotate:
-              p.rotation + 180,
+            scale: burst.size === 'big' ? 1 : 0.8,
+            rotate: p.rotation + 180,
           }}
           transition={{
             duration: p.duration,
@@ -101,15 +94,21 @@ function BurstGroup({
             cy={0}
             r={p.r}
             fill={burst.color}
+            filter={
+              burst.size === 'big'
+                ? 'url(#particleGlow)'
+                : undefined
+            }
           />
 
           {burst.size === 'big' &&
-            i % 7 === 0 && (
+            i % 6 === 0 && (
               <path
                 d={HEART_PATH}
-                transform="scale(0.45)"
+                transform="scale(0.42)"
                 fill={burst.color}
-                opacity={0.9}
+                opacity={0.95}
+                filter="url(#particleGlow)"
               />
             )}
         </motion.g>
@@ -134,31 +133,48 @@ function Branch({
 
   return (
     <g pointerEvents="none">
-      {/* Yumuşak ışık halesi */}
       {lightable && lit && (
-        <motion.line
-          x1={seg.x1}
-          y1={seg.y1}
-          x2={seg.x2}
-          y2={seg.y2}
-          stroke="#fbbf24"
-          strokeWidth={seg.width + 5}
-          strokeLinecap="round"
-          opacity={0.22}
-          filter="url(#softGlow)"
-          animate={{
-            opacity: [
-              0.12,
-              0.3,
-              0.12,
-            ],
-          }}
-          transition={{
-            duration: 1.8,
-            repeat: Infinity,
-            ease: 'easeInOut',
-          }}
-        />
+        <>
+          <motion.line
+            x1={seg.x1}
+            y1={seg.y1}
+            x2={seg.x2}
+            y2={seg.y2}
+            stroke="#fbbf24"
+            strokeWidth={seg.width + 8}
+            strokeLinecap="round"
+            opacity={0.18}
+            filter="url(#softGlow)"
+            animate={{
+              opacity: [0.1, 0.3, 0.1],
+            }}
+            transition={{
+              duration: 1.7,
+              repeat: Infinity,
+              ease: 'easeInOut',
+            }}
+          />
+
+          <motion.line
+            x1={seg.x1}
+            y1={seg.y1}
+            x2={seg.x2}
+            y2={seg.y2}
+            stroke="#fde68a"
+            strokeWidth={seg.width + 2}
+            strokeLinecap="round"
+            opacity={0.28}
+            filter="url(#lightGlow)"
+            animate={{
+              opacity: [0.2, 0.5, 0.2],
+            }}
+            transition={{
+              duration: 1.35,
+              repeat: Infinity,
+              ease: 'easeInOut',
+            }}
+          />
+        </>
       )}
 
       <motion.line
@@ -186,11 +202,7 @@ function Branch({
           lightable && lit
             ? {
                 pathLength: 1,
-                opacity: [
-                  0.78,
-                  1,
-                  0.78,
-                ],
+                opacity: [0.82, 1, 0.82],
               }
             : {
                 pathLength: 1,
@@ -250,13 +262,13 @@ function Heart({
       animate={{
         scale: [
           heart.size * 0.92,
-          heart.size * 1.04,
+          heart.size * 1.05,
           heart.size * 0.92,
         ],
         opacity: 1,
       }}
       whileTap={{
-        scale: heart.size * 0.55,
+        scale: heart.size * 0.5,
       }}
       transition={{
         delay: heart.delay,
@@ -268,17 +280,13 @@ function Heart({
         opacity: {
           duration: 0.3,
         },
-        type: 'spring',
-        stiffness: 220,
-        damping: 12,
       }}
       onPointerDown={(e) => {
         e.preventDefault()
         e.stopPropagation()
 
         if (
-          typeof navigator !==
-            'undefined' &&
+          typeof navigator !== 'undefined' &&
           'vibrate' in navigator
         ) {
           navigator.vibrate(12)
@@ -287,28 +295,27 @@ function Heart({
         onPop(heart)
       }}
     >
-      {/* Kalbin yumuşak ışığı */}
       <path
         d={HEART_PATH}
         fill={heart.color}
-        opacity={0.28}
-        transform="scale(1.45)"
+        opacity={0.3}
+        transform="scale(1.5)"
+        filter="url(#heartAura)"
       />
 
       <path
         d={HEART_PATH}
         fill={heart.color}
         stroke="#ecfdf5"
-        strokeOpacity={0.28}
+        strokeOpacity={0.3}
         strokeWidth={0.45}
       />
 
-      {/* Kalp üzerindeki küçük parlaklık */}
       <path
         d={HEART_PATH}
         fill="none"
         stroke="#ffffff"
-        strokeOpacity={0.32}
+        strokeOpacity={0.4}
         strokeWidth={0.35}
       />
     </motion.g>
@@ -329,11 +336,8 @@ export default function BirthdayTree() {
     [segments],
   )
 
-  const totalLights =
-    lightBranches.length
-
-  const totalHearts =
-    hearts.length
+  const totalLights = lightBranches.length
+  const totalHearts = hearts.length
 
   const [extinguished, setExtinguished] =
     useState<Set<number>>(new Set())
@@ -348,15 +352,12 @@ export default function BirthdayTree() {
     useState(false)
 
   const [bigPhase, setBigPhase] =
-    useState<
-      'hidden' | 'flying' | 'gone'
-    >('hidden')
+    useState<'hidden' | 'flying' | 'gone'>(
+      'hidden',
+    )
 
-  const [flash, setFlash] =
-    useState(false)
-
-  const [finale, setFinale] =
-    useState(false)
+  const [flash, setFlash] = useState(false)
+  const [finale, setFinale] = useState(false)
 
   const spawnBurst = (
     x: number,
@@ -374,17 +375,12 @@ export default function BirthdayTree() {
       size,
     }
 
-    setBursts((prev) => [
-      ...prev,
-      burst,
-    ])
+    setBursts((prev) => [...prev, burst])
   }
 
   const removeBurst = (id: number) => {
     setBursts((prev) =>
-      prev.filter(
-        (burst) => burst.id !== id,
-      ),
+      prev.filter((burst) => burst.id !== id),
     )
   }
 
@@ -392,13 +388,10 @@ export default function BirthdayTree() {
     segment: Segment,
   ) => {
     setExtinguished((prev) => {
-      if (prev.has(segment.id)) {
-        return prev
-      }
+      if (prev.has(segment.id)) return prev
 
       const next = new Set(prev)
       next.add(segment.id)
-
       return next
     })
 
@@ -411,26 +404,29 @@ export default function BirthdayTree() {
     )
   }
 
-  const popHeart = (
-    heart: HeartData,
-  ) => {
+  const popHeart = (heart: HeartData) => {
     setPopped((prev) => {
-      if (prev.has(heart.id)) {
-        return prev
-      }
+      if (prev.has(heart.id)) return prev
 
       const next = new Set(prev)
       next.add(heart.id)
-
       return next
     })
 
     spawnBurst(
       heart.x,
       heart.y,
-      '#34d399',
-      12,
+      '#10b981',
+      16,
       'normal',
+    )
+
+    spawnBurst(
+      heart.x,
+      heart.y,
+      '#34d399',
+      8,
+      'small',
     )
 
     spawnBurst(
@@ -472,25 +468,19 @@ export default function BirthdayTree() {
 
   const onBigHeartArrived = () => {
     if (
-      typeof navigator !==
-        'undefined' &&
+      typeof navigator !== 'undefined' &&
       'vibrate' in navigator
     ) {
-      navigator.vibrate([
-        25,
-        30,
-        45,
-      ])
+      navigator.vibrate([25, 30, 45])
     }
 
     setFlash(true)
 
-    // Büyük yeşil patlama
     spawnBurst(
       400,
       300,
       '#10b981',
-      90,
+      110,
       'big',
     )
 
@@ -498,6 +488,14 @@ export default function BirthdayTree() {
       400,
       300,
       '#34d399',
+      90,
+      'big',
+    )
+
+    spawnBurst(
+      400,
+      300,
+      '#6ee7b7',
       70,
       'big',
     )
@@ -505,8 +503,8 @@ export default function BirthdayTree() {
     spawnBurst(
       400,
       300,
-      '#86efac',
-      55,
+      '#a7f3d0',
+      45,
       'big',
     )
 
@@ -514,7 +512,7 @@ export default function BirthdayTree() {
       400,
       300,
       '#d9f99d',
-      35,
+      30,
       'big',
     )
 
@@ -524,9 +522,8 @@ export default function BirthdayTree() {
 
     setTimeout(() => {
       setFlash(false)
-    }, 900)
+    }, 950)
 
-    // Patlama sakinleştikten sonra sayaç.
     setTimeout(() => {
       setFinale(true)
     }, 1500)
@@ -547,7 +544,7 @@ export default function BirthdayTree() {
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            'radial-gradient(60% 50% at 50% 78%, rgba(16,185,129,0.14), transparent 70%)',
+            'radial-gradient(60% 50% at 50% 78%, rgba(16,185,129,0.16), transparent 70%)',
         }}
       />
 
@@ -560,12 +557,8 @@ export default function BirthdayTree() {
             preserveAspectRatio="xMidYMax meet"
             role="img"
             aria-label="Işıklı doğum günü ağacı"
-            initial={{
-              opacity: 1,
-            }}
-            animate={{
-              opacity: 1,
-            }}
+            initial={{ opacity: 1 }}
+            animate={{ opacity: 1 }}
             exit={{
               opacity: 0,
               scale: 0.96,
@@ -623,14 +616,9 @@ export default function BirthdayTree() {
                   stdDeviation="3.5"
                   result="blur"
                 />
-
                 <feMerge>
-                  <feMergeNode
-                    in="blur"
-                  />
-                  <feMergeNode
-                    in="SourceGraphic"
-                  />
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
                 </feMerge>
               </filter>
 
@@ -641,9 +629,7 @@ export default function BirthdayTree() {
                 width="300%"
                 height="300%"
               >
-                <feGaussianBlur
-                  stdDeviation="6"
-                />
+                <feGaussianBlur stdDeviation="6" />
               </filter>
 
               <filter
@@ -657,14 +643,36 @@ export default function BirthdayTree() {
                   stdDeviation="2.8"
                   result="blur"
                 />
-
                 <feMerge>
-                  <feMergeNode
-                    in="blur"
-                  />
-                  <feMergeNode
-                    in="SourceGraphic"
-                  />
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+
+              <filter
+                id="heartAura"
+                x="-200%"
+                y="-200%"
+                width="400%"
+                height="400%"
+              >
+                <feGaussianBlur stdDeviation="3.5" />
+              </filter>
+
+              <filter
+                id="particleGlow"
+                x="-300%"
+                y="-300%"
+                width="600%"
+                height="600%"
+              >
+                <feGaussianBlur
+                  stdDeviation="1.5"
+                  result="blur"
+                />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
                 </feMerge>
               </filter>
             </defs>
@@ -684,74 +692,55 @@ export default function BirthdayTree() {
                 key={segment.id}
                 seg={segment}
                 lit={
-                  isLightable(
-                    segment.depth,
-                  ) &&
-                  !extinguished.has(
-                    segment.id,
-                  )
+                  isLightable(segment.depth) &&
+                  !extinguished.has(segment.id)
                 }
               />
             ))}
 
             {/* DOKUNMA ALANLARI */}
-            <g
-              style={{
-                touchAction: 'none',
-              }}
-            >
-              {lightBranches.map(
-                (segment) => {
-                  if (
-                    extinguished.has(
-                      segment.id,
-                    )
-                  ) {
-                    return null
-                  }
+            <g style={{ touchAction: 'none' }}>
+              {lightBranches.map((segment) => {
+                if (
+                  extinguished.has(segment.id)
+                ) {
+                  return null
+                }
 
-                  return (
-                    <line
-                      key={`hit-${segment.id}`}
-                      x1={segment.x1}
-                      y1={segment.y1}
-                      x2={segment.x2}
-                      y2={segment.y2}
-                      stroke="transparent"
-                      strokeWidth={Math.max(
-                        segment.width + 30,
-                        38,
-                      )}
-                      strokeLinecap="round"
-                      fill="none"
-                      pointerEvents="stroke"
-                      style={{
-                        touchAction: 'none',
-                        cursor: 'pointer',
-                      }}
-                      onPointerDown={(
-                        e,
-                      ) => {
-                        e.preventDefault()
-                        e.stopPropagation()
-
-                        extinguishBranch(
-                          segment,
-                        )
-                      }}
-                    />
-                  )
-                },
-              )}
+                return (
+                  <line
+                    key={`hit-${segment.id}`}
+                    x1={segment.x1}
+                    y1={segment.y1}
+                    x2={segment.x2}
+                    y2={segment.y2}
+                    stroke="transparent"
+                    strokeWidth={Math.max(
+                      segment.width + 30,
+                      38,
+                    )}
+                    strokeLinecap="round"
+                    fill="none"
+                    pointerEvents="stroke"
+                    style={{
+                      touchAction: 'none',
+                      cursor: 'pointer',
+                    }}
+                    onPointerDown={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      extinguishBranch(segment)
+                    }}
+                  />
+                )
+              })}
             </g>
 
             {/* KÜÇÜK KALPLER */}
             {heartsActive &&
               hearts.map(
                 (heart) =>
-                  !popped.has(
-                    heart.id,
-                  ) && (
+                  !popped.has(heart.id) && (
                     <Heart
                       key={heart.id}
                       heart={heart}
@@ -762,8 +751,7 @@ export default function BirthdayTree() {
 
             {/* BÜYÜK FİNAL KALBİ */}
             <AnimatePresence>
-              {bigPhase ===
-                'flying' && (
+              {bigPhase === 'flying' && (
                 <motion.g
                   style={{
                     x: 400,
@@ -782,13 +770,7 @@ export default function BirthdayTree() {
                       6,
                       5.7,
                     ],
-                    opacity: [
-                      0,
-                      1,
-                      1,
-                      1,
-                      1,
-                    ],
+                    opacity: [0, 1, 1, 1, 1],
                   }}
                   exit={{
                     opacity: 0,
@@ -809,19 +791,25 @@ export default function BirthdayTree() {
                     onBigHeartArrived
                   }
                 >
-                  {/* Büyük kalbin aura'sı */}
+                  {/* Büyük kalbin yumuşak yeşil aurası — GÖLGE YOK */}
                   <motion.path
                     d={HEART_PATH}
                     fill="#10b981"
-                    opacity={0.22}
-                    transform="scale(1.55)"
-                    filter="url(#heartGlow)"
+                    opacity={0.2}
+                    transform="scale(1.6)"
+                    filter="url(#heartAura)"
                     animate={{
                       opacity: [
                         0.12,
-                        0.32,
+                        0.38,
                         0.18,
-                        0.4,
+                        0.42,
+                      ],
+                      scale: [
+                        1.45,
+                        1.7,
+                        1.5,
+                        1.75,
                       ],
                     }}
                     transition={{
@@ -831,6 +819,7 @@ export default function BirthdayTree() {
                     }}
                   />
 
+                  {/* Ana kalp */}
                   <path
                     d={HEART_PATH}
                     fill="#10b981"
@@ -838,18 +827,19 @@ export default function BirthdayTree() {
                     strokeWidth={0.65}
                   />
 
+                  {/* Kalbin canlı parlaması */}
                   <motion.path
                     d={HEART_PATH}
                     fill="none"
                     stroke="#ecfdf5"
-                    strokeWidth={0.75}
+                    strokeWidth={0.8}
                     initial={{
                       opacity: 0.15,
                     }}
                     animate={{
                       opacity: [
-                        0.15,
-                        0.95,
+                        0.2,
+                        1,
                         0.35,
                         1,
                       ],
@@ -860,6 +850,16 @@ export default function BirthdayTree() {
                       ease: 'easeInOut',
                     }}
                   />
+
+                  {/* İç parlaklık çizgisi */}
+                  <motion.path
+                    d={HEART_PATH}
+                    fill="none"
+                    stroke="#d1fae5"
+                    strokeWidth={0.35}
+                    opacity={0.75}
+                    transform="scale(0.82)"
+                  />
                 </motion.g>
               )}
             </AnimatePresence>
@@ -868,7 +868,7 @@ export default function BirthdayTree() {
             <AnimatePresence>
               {flash && (
                 <>
-                  {/* Merkezi flaş */}
+                  {/* Beyaz merkez flaşı */}
                   <motion.circle
                     cx={400}
                     cy={300}
@@ -878,7 +878,7 @@ export default function BirthdayTree() {
                       opacity: 1,
                     }}
                     animate={{
-                      r: 90,
+                      r: 105,
                       opacity: 0,
                     }}
                     transition={{
@@ -888,29 +888,28 @@ export default function BirthdayTree() {
                     pointerEvents="none"
                   />
 
-                  {/* 1. enerji halkası */}
+                  {/* Yeşil enerji halkaları */}
                   <motion.circle
                     cx={400}
                     cy={300}
                     fill="none"
                     stroke="#10b981"
-                    strokeWidth={7}
+                    strokeWidth={8}
                     initial={{
-                      r: 10,
+                      r: 8,
                       opacity: 1,
                     }}
                     animate={{
-                      r: 190,
+                      r: 200,
                       opacity: 0,
                     }}
                     transition={{
-                      duration: 0.7,
+                      duration: 0.72,
                       ease: 'easeOut',
                     }}
                     pointerEvents="none"
                   />
 
-                  {/* 2. enerji halkası */}
                   <motion.circle
                     cx={400}
                     cy={300}
@@ -918,22 +917,21 @@ export default function BirthdayTree() {
                     stroke="#34d399"
                     strokeWidth={5}
                     initial={{
-                      r: 15,
-                      opacity: 0.9,
+                      r: 12,
+                      opacity: 0.95,
                     }}
                     animate={{
-                      r: 280,
+                      r: 290,
                       opacity: 0,
                     }}
                     transition={{
-                      duration: 0.95,
-                      delay: 0.08,
+                      duration: 0.98,
+                      delay: 0.06,
                       ease: 'easeOut',
                     }}
                     pointerEvents="none"
                   />
 
-                  {/* 3. enerji halkası */}
                   <motion.circle
                     cx={400}
                     cy={300}
@@ -941,36 +939,36 @@ export default function BirthdayTree() {
                     stroke="#86efac"
                     strokeWidth={3}
                     initial={{
-                      r: 20,
-                      opacity: 0.85,
+                      r: 18,
+                      opacity: 0.9,
                     }}
                     animate={{
-                      r: 350,
+                      r: 360,
                       opacity: 0,
                     }}
                     transition={{
                       duration: 1.2,
-                      delay: 0.14,
+                      delay: 0.12,
                       ease: 'easeOut',
                     }}
                     pointerEvents="none"
                   />
 
-                  {/* Arka plan yeşil ışık */}
+                  {/* Büyük yeşil ışık dalgası */}
                   <motion.circle
                     cx={400}
                     cy={300}
                     fill="#10b981"
                     initial={{
                       r: 0,
-                      opacity: 0.18,
+                      opacity: 0.2,
                     }}
                     animate={{
-                      r: 420,
+                      r: 430,
                       opacity: 0,
                     }}
                     transition={{
-                      duration: 1.1,
+                      duration: 1.15,
                       ease: 'easeOut',
                     }}
                     pointerEvents="none"
@@ -980,52 +978,48 @@ export default function BirthdayTree() {
             </AnimatePresence>
 
             {/* PARÇACIKLAR */}
-            {bursts.map(
-              (burst) => (
-                <BurstGroup
-                  key={burst.id}
-                  burst={burst}
-                  onDone={removeBurst}
-                />
-              ),
-            )}
+            {bursts.map((burst) => (
+              <BurstGroup
+                key={burst.id}
+                burst={burst}
+                onDone={removeBurst}
+              />
+            ))}
           </motion.svg>
         )}
       </AnimatePresence>
 
       {/* ÜST YAZI */}
       <AnimatePresence>
-        {!lightsOut &&
-          !finale && (
-            <motion.div
-              className="pointer-events-none absolute left-1/2 top-5 z-30 w-[94%] -translate-x-1/2 text-center"
-              initial={{
-                opacity: 0,
-                y: -10,
-              }}
-              animate={{
-                opacity: 1,
-                y: 0,
-              }}
-              exit={{
-                opacity: 0,
-                y: -10,
-              }}
-            >
-              <p className="text-base font-semibold tracking-wide text-amber-200 sm:text-xl">
-                Işıyan dallara dokun ve söndür Betül
-              </p>
+        {!lightsOut && !finale && (
+          <motion.div
+            className="pointer-events-none absolute left-1/2 top-5 z-30 w-[94%] -translate-x-1/2 text-center"
+            initial={{
+              opacity: 0,
+              y: -10,
+            }}
+            animate={{
+              opacity: 1,
+              y: 0,
+            }}
+            exit={{
+              opacity: 0,
+              y: -10,
+            }}
+          >
+            <p className="text-base font-semibold tracking-wide text-amber-200 sm:text-xl">
+              Işıyan dallara dokun ve söndür Betül
+            </p>
 
-              <p className="mt-1 text-xs uppercase tracking-widest text-amber-100/50 tabular-nums">
-                {Math.max(
-                  totalLights -
-                    extinguished.size,
-                  0,
-                )}{' '}
-                dal kaldı
-              </p>
-            </motion.div>
-          )}
+            <p className="mt-1 text-xs uppercase tracking-widest text-amber-100/50 tabular-nums">
+              {Math.max(
+                totalLights - extinguished.size,
+                0,
+              )}{' '}
+              dal kaldı
+            </p>
+          </motion.div>
+        )}
       </AnimatePresence>
 
       {/* KALP AVI */}
@@ -1050,16 +1044,16 @@ export default function BirthdayTree() {
               duration: 0.4,
             }}
           >
-            <div className="rounded-xl border border-rose-400/20 bg-black/45 p-2.5 backdrop-blur-md sm:rounded-2xl sm:p-4">
+            <div className="rounded-xl border border-emerald-400/20 bg-black/45 p-2.5 backdrop-blur-md sm:rounded-2xl sm:p-4">
               <div className="mb-1 flex items-center gap-1.5">
-                <span className="h-1.5 w-1.5 rounded-full bg-rose-400 shadow-[0_0_8px_2px] shadow-rose-400/50 sm:h-2 sm:w-2" />
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_2px] shadow-emerald-400/50 sm:h-2 sm:w-2" />
 
-                <p className="text-[9px] font-medium uppercase tracking-widest text-rose-100/70 sm:text-xs">
+                <p className="text-[9px] font-medium uppercase tracking-widest text-emerald-100/70 sm:text-xs">
                   Kalp Avı
                 </p>
               </div>
 
-              <p className="mb-2 text-[10px] text-rose-100/50 sm:mb-3 sm:text-xs">
+              <p className="mb-2 text-[10px] text-emerald-100/50 sm:mb-3 sm:text-xs">
                 Kalpleri patlat!
               </p>
 
@@ -1073,26 +1067,26 @@ export default function BirthdayTree() {
                     }}
                     animate={{
                       scale: 1,
-                      color: '#fda4af',
+                      color: '#6ee7b7',
                     }}
                     className="text-xl font-bold tabular-nums sm:text-3xl"
                   >
                     {popped.size}
                   </motion.p>
 
-                  <p className="text-[8px] uppercase tracking-widest text-rose-100/50">
+                  <p className="text-[8px] uppercase tracking-widest text-emerald-100/50">
                     Patlatılan
                   </p>
                 </div>
 
-                <p className="text-[10px] text-rose-100/40 tabular-nums sm:text-xs">
+                <p className="text-[10px] text-emerald-100/40 tabular-nums sm:text-xs">
                   / {totalHearts}
                 </p>
               </div>
 
               <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-white/10">
                 <motion.div
-                  className="h-full rounded-full bg-gradient-to-r from-emerald-400 via-emerald-300 to-rose-300 shadow-[0_0_8px_rgba(52,211,153,0.55)]"
+                  className="h-full rounded-full bg-gradient-to-r from-emerald-500 via-emerald-300 to-lime-200 shadow-[0_0_10px_rgba(52,211,153,0.65)]"
                   animate={{
                     width: `${
                       totalHearts
@@ -1114,7 +1108,7 @@ export default function BirthdayTree() {
         )}
       </AnimatePresence>
 
-      {/* FİNAL — SADECE MEVCUT SAYAÇ */}
+      {/* FİNAL — MEVCUT SAYAÇ */}
       <AnimatePresence>
         {finale && (
           <motion.div
