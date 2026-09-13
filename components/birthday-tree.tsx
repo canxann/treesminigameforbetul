@@ -168,6 +168,11 @@ function Branch({
           ? '#fbbf24'
           : baseColor
       }
+      filter={
+        lightable && lit
+          ? 'url(#lightGlow)'
+          : undefined
+      }
       strokeWidth={seg.width}
       strokeLinecap="round"
       initial={{
@@ -229,6 +234,7 @@ function Heart({
         y: heart.y,
         cursor: 'pointer',
         touchAction: 'none',
+        filter: 'url(#heartGlow)',
       }}
       initial={{
         scale: 0,
@@ -411,7 +417,6 @@ export default function BirthdayTree() {
   const onBigHeartArrived = () => {
     setFlash(true)
 
-    // Zümrüt ana patlama
     spawnBurst(
       400,
       300,
@@ -420,7 +425,6 @@ export default function BirthdayTree() {
       'big',
     )
 
-    // Açık yeşil enerji
     spawnBurst(
       400,
       300,
@@ -429,7 +433,6 @@ export default function BirthdayTree() {
       'big',
     )
 
-    // Lime parıltıları
     spawnBurst(
       400,
       300,
@@ -438,7 +441,6 @@ export default function BirthdayTree() {
       'big',
     )
 
-    // Açık yeşil / beyaz ışıltı
     spawnBurst(
       400,
       300,
@@ -541,6 +543,52 @@ export default function BirthdayTree() {
                   stopColor="rgba(16,185,129,0)"
                 />
               </radialGradient>
+
+              {/* DAL IŞIĞI GLOW */}
+              <filter
+                id="lightGlow"
+                x="-100%"
+                y="-100%"
+                width="300%"
+                height="300%"
+              >
+                <feGaussianBlur
+                  stdDeviation="5"
+                  result="blur"
+                />
+
+                <feMerge>
+                  <feMergeNode
+                    in="blur"
+                  />
+                  <feMergeNode
+                    in="SourceGraphic"
+                  />
+                </feMerge>
+              </filter>
+
+              {/* KALP GLOW */}
+              <filter
+                id="heartGlow"
+                x="-100%"
+                y="-100%"
+                width="300%"
+                height="300%"
+              >
+                <feGaussianBlur
+                  stdDeviation="2.8"
+                  result="blur"
+                />
+
+                <feMerge>
+                  <feMergeNode
+                    in="blur"
+                  />
+                  <feMergeNode
+                    in="SourceGraphic"
+                  />
+                </feMerge>
+              </filter>
             </defs>
 
             <ellipse
@@ -634,7 +682,7 @@ export default function BirthdayTree() {
                   ),
               )}
 
-            {/* BÜYÜK YEŞİL FİNAL KALBİ */}
+            {/* BÜYÜK FİNAL KALBİ */}
             <AnimatePresence>
               {bigPhase ===
                 'flying' && (
@@ -687,7 +735,6 @@ export default function BirthdayTree() {
                     strokeWidth={0.5}
                   />
 
-                  {/* Kalp içi parıltı */}
                   <motion.path
                     d={HEART_PATH}
                     fill="none"
@@ -714,11 +761,10 @@ export default function BirthdayTree() {
               )}
             </AnimatePresence>
 
-            {/* YEŞİL ŞAŞALI PATLAMA */}
+            {/* YEŞİL FİNAL PATLAMASI */}
             <AnimatePresence>
               {flash && (
                 <>
-                  {/* Beyaz merkez flash */}
                   <motion.circle
                     cx={400}
                     cy={300}
@@ -738,7 +784,6 @@ export default function BirthdayTree() {
                     pointerEvents="none"
                   />
 
-                  {/* Zümrüt shockwave */}
                   <motion.circle
                     cx={400}
                     cy={300}
@@ -760,7 +805,6 @@ export default function BirthdayTree() {
                     pointerEvents="none"
                   />
 
-                  {/* Mint shockwave */}
                   <motion.circle
                     cx={400}
                     cy={300}
@@ -783,7 +827,6 @@ export default function BirthdayTree() {
                     pointerEvents="none"
                   />
 
-                  {/* Açık yeşil shockwave */}
                   <motion.circle
                     cx={400}
                     cy={300}
@@ -806,7 +849,6 @@ export default function BirthdayTree() {
                     pointerEvents="none"
                   />
 
-                  {/* Merkez ışığı */}
                   <motion.circle
                     cx={400}
                     cy={300}
