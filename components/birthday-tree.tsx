@@ -1,7 +1,7 @@
 'use client'
 
 import { AnimatePresence, motion } from 'framer-motion'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   generateTree,
   HEART_PATH,
@@ -20,7 +20,7 @@ type Burst = {
 
 let burstSeq = 0
 
-// Ağacın gövdesi hariç bütün dallar söndürülebilir.
+// Gövde hariç bütün dallar söndürülebilir.
 const isLightable = (depth: number) => depth >= 1
 
 function BurstGroup({
@@ -93,143 +93,80 @@ function BurstGroup({
 function Branch({
   seg,
   lit,
-  onExtinguish,
 }: {
   seg: Segment
   lit: boolean
-  onExtinguish: (s: Segment) => void
 }) {
-  const lightable = isLightable(seg.depth)
-
-  if (!lightable) {
-    return (
-      <motion.line
-        x1={seg.x1}
-        y1={seg.y1}
-        x2={seg.x2}
-        y2={seg.y2}
-        stroke="url(#trunk)"
-        strokeWidth={seg.width}
-        strokeLinecap="round"
-        initial={{
-          pathLength: 0,
-          opacity: 0,
-        }}
-        animate={{
-          pathLength: 1,
-          opacity: 1,
-        }}
-        transition={{
-          pathLength: {
-            delay: seg.delay,
-            duration: 0.6,
-            ease: 'easeOut',
-          },
-        }}
-        pointerEvents="none"
-      />
-    )
-  }
-
   const baseColor =
     seg.depth <= 1
       ? 'url(#trunk)'
       : '#6b4a2b'
 
-  const extinguish = (
-    e: React.PointerEvent<SVGLineElement>,
-  ) => {
-    e.preventDefault()
-    e.stopPropagation()
-
-    if (!lit) return
-
-    onExtinguish(seg)
-  }
-
   return (
-    <g>
-      {/* Telefonda çok daha büyük dokunma alanı */}
-      {lit && (
-        <line
-          x1={seg.x1}
-          y1={seg.y1}
-          x2={seg.x2}
-          y2={seg.y2}
-          stroke="transparent"
-          strokeWidth={Math.max(seg.width + 50, 58)}
-          strokeLinecap="round"
-          pointerEvents="stroke"
-          style={{
-            cursor: 'pointer',
-            touchAction: 'none',
-          }}
-          onPointerDown={extinguish}
-        />
-      )}
-
-      {/* Görünen dal */}
-      <motion.line
-        x1={seg.x1}
-        y1={seg.y1}
-        x2={seg.x2}
-        y2={seg.y2}
-        stroke={lit ? '#fbbf24' : baseColor}
-        strokeWidth={seg.width}
-        strokeLinecap="round"
-        initial={{
-          pathLength: 0,
-          opacity: 0,
-        }}
-        animate={
-          lit
-            ? {
-                pathLength: 1,
-                opacity: [0.85, 1, 0.85],
-                filter: [
-                  'drop-shadow(0 0 3px #f59e0b)',
-                  'drop-shadow(0 0 9px #fbbf24)',
-                  'drop-shadow(0 0 3px #f59e0b)',
-                ],
-              }
-            : {
-                pathLength: 1,
-                opacity: 1,
-                filter:
-                  'drop-shadow(0 0 0px transparent)',
-              }
-        }
-        transition={
-          lit
-            ? {
-                pathLength: {
-                  delay: seg.delay,
-                  duration: 0.6,
-                  ease: 'easeOut',
-                },
-                opacity: {
-                  duration: 1.6,
-                  repeat: Infinity,
-                  ease: 'easeInOut',
-                },
-                filter: {
-                  duration: 1.6,
-                  repeat: Infinity,
-                  ease: 'easeInOut',
-                },
-              }
-            : {
-                pathLength: {
-                  delay: seg.delay,
-                  duration: 0.6,
-                  ease: 'easeOut',
-                },
-                duration: 0.4,
-              }
-        }
-        pointerEvents="none"
-      />
-    </g>
+    <motion.line
+      x1={seg.x1}
+      y1={seg.y1}
+      x2={seg.x2}
+      y2={seg.y2}
+      stroke={
+        isLightable(seg.depth) && lit
+          ? '#fbbf24'
+          : baseColor
+      }
+      strokeWidth={seg.width}
+      strokeLinecap="round"
+      initial={{
+        pathLength: 0,
+        opacity: 0,
+      }}
+      animate={
+        isLightable(seg.depth) && lit
+          ? {
+              pathLength: 1,
+              opacity: [0.85, 1, 0.85],
+              filter: [
+                'drop-shadow(0 0 3px #f59e0b)',
+                'drop-shadow(0 0 9px #fbbf24)',
+                'drop-shadow(0 0 3px #f59e0b)',
+              ],
+            }
+          : {
+              pathLength: 1,
+              opacity: 1,
+              filter:
+                'drop-shadow(0 0 0px transparent)',
+            }
+      }
+      transition={
+        isLightable(seg.depth) && lit
+          ? {
+              pathLength: {
+                delay: seg.delay,
+                duration: 0.6,
+                ease: 'easeOut',
+              },
+              opacity: {
+                duration: 1.6,
+                repeat: Infinity,
+                ease: 'easeInOut',
+              },
+              filter: {
+                duration: 1.6,
+                repeat: Infinity,
+                ease: 'easeInOut',
+              },
+            }
+          : {
+              pathLength: {
+                delay: seg.delay,
+                duration: 0.6,
+                ease: 'easeOut',
+              },
+              duration: 0.4,
+            }
+      }
+      pointerEvents="none"
+    />
   )
 }
 
@@ -291,6 +228,8 @@ export default function BirthdayTree() {
     [],
   )
 
+  const svgRef = useRef<SVGSVGElement>(null)
+
   const totalHearts = hearts.length
 
   const lightBranches = useMemo(
@@ -340,10 +279,7 @@ export default function BirthdayTree() {
       count,
     }
 
-    setBursts((prev) => [
-      ...prev,
-      b,
-    ])
+    setBursts((prev) => [...prev, b])
   }
 
   const removeBurst = (id: number) => {
@@ -368,6 +304,80 @@ export default function BirthdayTree() {
       '#fbbf24',
       10,
     )
+  }
+
+  /*
+   * Telefonda dokunulan noktaya en yakın yanan dalı bulur.
+   *
+   * Bu sistem görünmez dev hitbox kullanmaz.
+   * Böylece dallar birbirinin dokunma alanını kapatamaz.
+   */
+  const handleTreePointerDown = (
+    e: React.PointerEvent<SVGSVGElement>,
+  ) => {
+    if (!svgRef.current) return
+    if (lightsOut) return
+
+    const svg = svgRef.current
+    const point = svg.createSVGPoint()
+
+    point.x = e.clientX
+    point.y = e.clientY
+
+    const matrix = svg.getScreenCTM()
+
+    if (!matrix) return
+
+    const svgPoint = point.matrixTransform(
+      matrix.inverse(),
+    )
+
+    let closest: Segment | null = null
+    let closestDistance = Infinity
+
+    for (const seg of lightBranches) {
+      if (extinguished.has(seg.id)) continue
+
+      const dx = seg.x2 - seg.x1
+      const dy = seg.y2 - seg.y1
+
+      const lengthSquared =
+        dx * dx + dy * dy
+
+      if (lengthSquared === 0) continue
+
+      let t =
+        ((svgPoint.x - seg.x1) * dx +
+          (svgPoint.y - seg.y1) * dy) /
+        lengthSquared
+
+      t = Math.max(0, Math.min(1, t))
+
+      const closestX =
+        seg.x1 + t * dx
+
+      const closestY =
+        seg.y1 + t * dy
+
+      const distance = Math.hypot(
+        svgPoint.x - closestX,
+        svgPoint.y - closestY,
+      )
+
+      if (distance < closestDistance) {
+        closestDistance = distance
+        closest = seg
+      }
+    }
+
+    /*
+     * 70 SVG birimi yaklaşık olarak telefonda
+     * oldukça rahat bir dokunma alanı verir.
+     */
+    if (closest && closestDistance <= 70) {
+      e.preventDefault()
+      extinguishBranch(closest)
+    }
   }
 
   const popHeart = (h: HeartData) => {
@@ -481,16 +491,16 @@ export default function BirthdayTree() {
       />
 
       <svg
+        ref={svgRef}
         viewBox="0 0 800 600"
-        className="absolute inset-0 h-full w-full touch-none"
+        className="absolute inset-0 h-full w-full"
         preserveAspectRatio="xMidYMax meet"
         role="img"
         aria-label="Işıklı dalları olan doğum günü ağacı"
         style={{
           touchAction: 'none',
-          transform: 'scale(1.4)',
-          transformOrigin: 'center bottom',
         }}
+        onPointerDown={handleTreePointerDown}
       >
         <defs>
           <linearGradient
@@ -533,9 +543,9 @@ export default function BirthdayTree() {
           rx="230"
           ry="26"
           fill="url(#ground)"
+          pointerEvents="none"
         />
 
-        {/* Tree */}
         {segments.map((s) => (
           <Branch
             key={s.id}
@@ -544,13 +554,9 @@ export default function BirthdayTree() {
               isLightable(s.depth) &&
               !extinguished.has(s.id)
             }
-            onExtinguish={
-              extinguishBranch
-            }
           />
         ))}
 
-        {/* Hearts */}
         {heartsActive &&
           hearts.map(
             (h) =>
@@ -563,7 +569,6 @@ export default function BirthdayTree() {
               ),
           )}
 
-        {/* Big heart */}
         <AnimatePresence>
           {bigPhase === 'flying' && (
             <motion.g
@@ -608,7 +613,6 @@ export default function BirthdayTree() {
           )}
         </AnimatePresence>
 
-        {/* Flash */}
         <AnimatePresence>
           {flash && (
             <motion.circle
@@ -630,11 +634,11 @@ export default function BirthdayTree() {
                 duration: 0.5,
                 ease: 'easeOut',
               }}
+              pointerEvents="none"
             />
           )}
         </AnimatePresence>
 
-        {/* Burst particles */}
         {bursts.map((b) => (
           <BurstGroup
             key={b.id}
@@ -644,7 +648,6 @@ export default function BirthdayTree() {
         ))}
       </svg>
 
-      {/* Intro */}
       <AnimatePresence>
         {!lightsOut && (
           <motion.div
@@ -678,7 +681,6 @@ export default function BirthdayTree() {
         )}
       </AnimatePresence>
 
-      {/* Countdown */}
       <motion.div
         className="absolute left-4 top-4 z-10 sm:left-6 sm:top-6"
         initial={{
@@ -700,7 +702,6 @@ export default function BirthdayTree() {
         <Countdown />
       </motion.div>
 
-      {/* Minigame */}
       <motion.div
         className="absolute left-4 bottom-20 z-10 w-[170px] sm:left-auto sm:bottom-auto sm:right-6 sm:top-6 sm:w-[210px]"
         initial={{
